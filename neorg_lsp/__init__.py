@@ -2,8 +2,8 @@
 
 # TS Query syntax: https://tree-sitter.github.io/tree-sitter/using-parsers#query-syntax
 import itertools
-from typing import Optional
 from tree_sitter import Language, Parser
+from dataclasses import dataclass
 
 from pathlib import Path
 
@@ -17,7 +17,13 @@ norg_meta_parser = Parser()
 norg_meta_parser.set_language(NEORG_META_LANGUAGE)
 
 
-def get_metadata_text(file_bytes: bytes) -> Optional[bytes]:
+@dataclass
+class Metadata:
+    title: str
+    category: list[str]
+
+
+def get_metadata_text(file_bytes: bytes) -> bytes:
     tree = norg_parser.parse(file_bytes)
 
     metadata_query = NEORG_LANGUAGE.query("""
@@ -28,15 +34,19 @@ def get_metadata_text(file_bytes: bytes) -> Optional[bytes]:
     """)
     metadata_match = metadata_query.matches(tree.root_node)
     if not metadata_match:
-        return None
+        return b""
 
-    return next(
-        map(lambda match: match[1].get("metadata.content").text, metadata_match), b""
+    return (
+        next(
+            map(lambda match: match[1].get("metadata.content").text, metadata_match),
+            b"",
+        )
+        or b""
     )
 
 
-def get_title(file_bytes: bytes) -> Optional[str]:
-    metadata_tree = norg_meta_parser.parse(get_metadata_text(file_bytes) or b"")
+def get_title(metadata_bytes: bytes) -> str:
+    metadata_tree = norg_meta_parser.parse(metadata_bytes)
 
     title_query = NEORG_META_LANGUAGE.query("""
     (pair
@@ -47,18 +57,21 @@ def get_title(file_bytes: bytes) -> Optional[str]:
     titles = title_query.matches(metadata_tree.root_node)
 
     if not titles:
-        return None
+        return ""
 
-    return next(
-        map(
-            lambda match: match[1].get("title.string").text.decode("utf-8"),
-            filter(lambda match: len(match[1]) > 0, titles),
+    return (
+        next(
+            map(
+                lambda match: match[1].get("title.string").text.decode("utf-8"),
+                filter(lambda match: len(match[1]) > 0, titles),
+            )
         )
+        or ""
     )
 
 
-def get_categories(file_bytes: bytes) -> list[str]:
-    metadata_tree = norg_meta_parser.parse(get_metadata_text(file_bytes) or b"")
+def get_categories(metadata_bytes: bytes) -> list[str]:
+    metadata_tree = norg_meta_parser.parse(metadata_bytes)
 
     category_query = NEORG_META_LANGUAGE.query("""
     (pair
@@ -81,17 +94,21 @@ def get_categories(file_bytes: bytes) -> list[str]:
 
 def main() -> None:
     norg_dir = Path(Path.home(), "notes/")
-    all_cats: list[str] = []
-    all_tits: list[str] = []
+    all_mets = []
+    set_cats = set()
     for path in norg_dir.iterdir():
         if path.suffix != ".norg":
             continue
         with path.open("rb") as f:
             first_lines = list(itertools.islice(f.readlines(), 50))
-            all_cats.extend(get_categories(b"".join(first_lines)))
-            all_tits.append(get_title(b"".join(first_lines)) or "")
-    print(list(set(all_cats)))
-    print(list(set(all_tits)))
+            metadata_text = get_metadata_text(b"".join(first_lines))
+            cats = get_categories(metadata_text)
+            tit = get_title(metadata_text)
+            set_cats.update(cats)
+            all_mets.append(Metadata(tit, cats))
+
+    print(list(map(lambda mdata: mdata.title, all_mets)))
+    print(set_cats)
 
 
 if __name__ == "__main__":
