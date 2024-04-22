@@ -8,10 +8,14 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.11,<3.12"
 tree-sitter = "^0.21.0"
+dataclasses-json = "^0.6.4"
+attrs = "^23.2.0"
+cattrs = "^23.2.3"
 
 
 [tool.poetry.group.dev.dependencies]
 ipython = "^8.22.2"
+mypy = "^1.9.0"
 
 [build-system]
 requires = ["poetry-core"]

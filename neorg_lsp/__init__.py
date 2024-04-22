@@ -1,115 +1,92 @@
-# Docs: https://github.com/tree-sitter/py-tree-sitter
+import json
+import time
+import logging
+import re
+from sys import stdin
+from sys import stdout
+from typing import Any
 
-# TS Query syntax: https://tree-sitter.github.io/tree-sitter/using-parsers#query-syntax
-import itertools
-from tree_sitter import Language, Parser
-from dataclasses import dataclass
+import cattrs
 
-from pathlib import Path
+from neorg_lsp.methods import LspMethods
+from neorg_lsp.methods.initialize import handle_init
+from neorg_lsp.rpc import BaseNotification
+from neorg_lsp.rpc import BaseRequest
+from neorg_lsp.rpc import BaseResponse
+from neorg_lsp.rpc import ClientMessage
+from neorg_lsp.rpc.requests import InitializeRequest
 
-NEORG_LANGUAGE = Language("neorg_lsp/resources/parsers/norg.so", "norg")
-NEORG_META_LANGUAGE = Language("neorg_lsp/resources/parsers/norg_meta.so", "norg_meta")
-
-norg_parser = Parser()
-norg_parser.set_language(NEORG_LANGUAGE)
-
-norg_meta_parser = Parser()
-norg_meta_parser.set_language(NEORG_META_LANGUAGE)
-
-
-@dataclass
-class Metadata:
-    title: str
-    category: list[str]
+logging.basicConfig(filename="wow.log", level=logging.DEBUG)
+log = logging.getLogger("neorg-lsp")
 
 
-def get_metadata_text(file_bytes: bytes) -> bytes:
-    tree = norg_parser.parse(file_bytes)
-
-    metadata_query = NEORG_LANGUAGE.query("""
-    (ranged_verbatim_tag
-      name: (tag_name) @tag.name (#eq? @tag.name "document.meta")
-      content: (ranged_verbatim_tag_content) @metadata.content
-        )
-    """)
-    metadata_match = metadata_query.matches(tree.root_node)
-    if not metadata_match:
-        return b""
-
-    return (
-        next(
-            map(lambda match: match[1].get("metadata.content").text, metadata_match),
-            b"",
-        )
-        or b""
-    )
+DecodedMessage = tuple[str, str]
 
 
-def get_title(metadata_bytes: bytes) -> str:
-    metadata_tree = norg_meta_parser.parse(metadata_bytes)
-
-    title_query = NEORG_META_LANGUAGE.query("""
-    (pair
-      (key) @meta.key (#eq? @meta.key "title")
-      (string) @title.string
-    )
-    """)
-    titles = title_query.matches(metadata_tree.root_node)
-
-    if not titles:
-        return ""
-
-    return (
-        next(
-            map(
-                lambda match: match[1].get("title.string").text.decode("utf-8"),
-                filter(lambda match: len(match[1]) > 0, titles),
-            )
-        )
-        or ""
-    )
+CONTENT_LENGTH = len("Content-Length: ")
 
 
-def get_categories(metadata_bytes: bytes) -> list[str]:
-    metadata_tree = norg_meta_parser.parse(metadata_bytes)
-
-    category_query = NEORG_META_LANGUAGE.query("""
-    (pair
-      (key) @meta.key (#eq? @meta.key "categories")
-      [(array (string) @category.string)
-      (string) @category.string]
-    )
-    """)
-    categories = category_query.matches(metadata_tree.root_node)
-    if not categories:
-        return list()
-
-    return list(
-        map(
-            lambda match: match[1].get("category.string").text.decode("utf-8"),
-            filter(lambda match: len(match[1]) > 0, categories),
-        )
-    )
+def encode_message(data: dict) -> bytes:
+    encoded_message = b"Content-Length: "
+    content = json.dumps(cattrs.unstructure(data)).encode("utf-8")
+    return encoded_message + str(len(content)).encode("utf-8") + b"\r\n\r\n" + content
 
 
-def main() -> None:
-    norg_dir = Path(Path.home(), "notes/")
-    all_mets = []
-    set_cats = set()
-    for path in norg_dir.iterdir():
-        if path.suffix != ".norg":
-            continue
-        with path.open("rb") as f:
-            first_lines = list(itertools.islice(f.readlines(), 50))
-            metadata_text = get_metadata_text(b"".join(first_lines))
-            cats = get_categories(metadata_text)
-            tit = get_title(metadata_text)
-            set_cats.update(cats)
-            all_mets.append(Metadata(tit, cats))
+def decode_message(message: bytes, to_type):
+    base_message = cattrs.structure(json.loads(message.decode("utf-8")), to_type)
+    return base_message
 
-    print(list(map(lambda mdata: mdata.title, all_mets)))
-    print(set_cats)
 
+def send_message(response: Any) -> None:
+    byte_res = encode_message(cattrs.unstructure(response))
+    stdout.buffer.write(byte_res)
+    stdout.buffer.flush()
+
+
+# TODO: Implement State
+# TODO: Implement textOpen and textEdit to populate references and categories
 
 if __name__ == "__main__":
-    main()
+    timeout = 1
+    buffer = b""
+    while stdin.readable():
+        buffer = buffer + stdin.buffer.read(1)
+
+        # TODO: Smarter validation of input and error handling for proper reset
+        # I need some sort of scanner to find Content-Length and discard everything before it.
+        match_header = re.match(
+            r"Content-Length: (\d+)\r\n\r\n", buffer.decode("utf-8")
+        )
+        if not match_header:
+            continue
+        buffer = b""
+        content_length = int(match_header.group(1))
+        content = stdin.buffer.read(content_length)
+        base = decode_message(content, ClientMessage)
+        log.info(f"{base.method=}")
+        if base.method == LspMethods.INITIALIZE.value:
+            log.info("Initializing LSP...")
+            base = decode_message(content, BaseRequest)
+            req = cattrs.structure(base.params, InitializeRequest)
+            response = handle_init(base, req)
+            send_message(response)
+            send_message(
+                BaseNotification(
+                    "window/showMessage", {"type": 1, "message": f"Hello from Lsp. Timestamp: {time.time()}"}
+                )
+            )
+
+        elif base.method == LspMethods.SHUTDOWN.value:
+            log.info("Shutting down...")
+            base = decode_message(content, BaseRequest)
+            send_message(
+                BaseResponse(
+                    base.id,
+                    None,
+                    None,
+                )
+            )
+        elif base.method == LspMethods.EXIT.value:
+            log.info("Exiting")
+            exit()
+
