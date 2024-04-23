@@ -1,56 +1,25 @@
-import json
 import logging
 import re
-import time
 from sys import stdin
-from sys import stdout
-from typing import Any
 
-import cattrs
 
-from neorg_lsp.methods import LspMethods
-from neorg_lsp.methods.initialize import handle_init
-from neorg_lsp.rpc import BaseNotification
-from neorg_lsp.rpc import BaseRequest
-from neorg_lsp.rpc import BaseResponse
-from neorg_lsp.rpc import ClientMessage
-from neorg_lsp.rpc.requests import InitializeRequest
+from neorg_lsp.methods.factory import MethodHandlerFactory
+from neorg_lsp.rpc import (
+    BaseNotification,
+    BaseRequest,
+    IncomingMessage,
+)
+from neorg_lsp.state import State
 
 logging.basicConfig(filename="wow.log", level=logging.DEBUG)
 log = logging.getLogger("neorg-lsp")
 
 
-DecodedMessage = tuple[str, str]
-
-
-CONTENT_LENGTH = len("Content-Length: ")
-
-
-def encode_message(data: dict) -> bytes:
-    encoded_message = b"Content-Length: "
-    content = json.dumps(cattrs.unstructure(data)).encode("utf-8")
-    return encoded_message + str(len(content)).encode("utf-8") + b"\r\n\r\n" + content
-
-
-def decode_message(message: bytes, to_type):
-    base_message = cattrs.structure(json.loads(message.decode("utf-8")), to_type)
-    return base_message
-
-
-def send_message(response: Any) -> None:
-    byte_res = encode_message(cattrs.unstructure(response))
-    stdout.buffer.write(byte_res)
-    stdout.buffer.flush()
-
-
-def send_notification(message: str, level: int = 1) -> None:
-    send_message(
-        BaseNotification("window/showMessage", {"type": level, "message": message})
-    )
-
-
 # TODO: Implement State
 # TODO: Implement textOpen and textEdit to populate references and categories
+
+
+lspState = State()
 
 if __name__ == "__main__":
     timeout = 1
@@ -68,28 +37,10 @@ if __name__ == "__main__":
         buffer = b""
         content_length = int(match_header.group(1))
         content = stdin.buffer.read(content_length)
-        base = decode_message(content, ClientMessage)
-        log.info(f"{base.method=}")
-        if base.method == LspMethods.INITIALIZE.value:
-            log.info("Initializing LSP...")
-            base = decode_message(content, BaseRequest)
-            req = cattrs.structure(base.params, InitializeRequest)
-            response = handle_init(base, req)
-            send_message(response)
-            send_notification(f"Hello from Lsp. Timestamp: {time.time()}")
+        log.info(f"{content=}")
 
-        elif base.method == LspMethods.SHUTDOWN.value:
-            log.info("Shutting down...")
-            send_notification("WHYYYY")
-            base = decode_message(content, BaseRequest)
-            send_message(
-                BaseResponse(
-                    base.id,
-                    None,
-                    None,
-                )
-            )
-        elif base.method == LspMethods.EXIT.value:
-            log.info("Exiting")
-            send_notification("BYEEEEEE")
-            exit()
+        base = IncomingMessage.decode(content)
+        log.info(f"{base.method=}")
+
+        handler = MethodHandlerFactory(lspState).create_handler(base.method, content)
+        handler.handle_request()

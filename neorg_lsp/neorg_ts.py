@@ -1,14 +1,18 @@
 # Docs: https://github.com/tree-sitter/py-tree-sitter
-
 # TS Query syntax: https://tree-sitter.github.io/tree-sitter/using-parsers#query-syntax
 import itertools
-from tree_sitter import Language, Parser
-from dataclasses import dataclass
-
 from pathlib import Path
 
-NEORG_LANGUAGE = Language("neorg_lsp/resources/parsers/norg.so", "norg")
-NEORG_META_LANGUAGE = Language("neorg_lsp/resources/parsers/norg_meta.so", "norg_meta")
+import attrs
+from tree_sitter import Language
+from tree_sitter import Parser
+
+NEORG_LANGUAGE = Language(
+    (Path(__file__).parent / "resources/parsers/norg.so").as_posix(), "norg"
+)
+NEORG_META_LANGUAGE = Language(
+    (Path(__file__).parent / "resources/parsers/norg_meta.so").as_posix(), "norg_meta"
+)
 
 norg_parser = Parser()
 norg_parser.set_language(NEORG_LANGUAGE)
@@ -17,7 +21,7 @@ norg_meta_parser = Parser()
 norg_meta_parser.set_language(NEORG_META_LANGUAGE)
 
 
-@dataclass
+@attrs.define
 class Metadata:
     title: str
     category: list[str]
@@ -94,8 +98,8 @@ def get_categories(metadata_bytes: bytes) -> list[str]:
 
 def main() -> None:
     norg_dir = Path(Path.home(), "notes/")
-    all_mets = []
-    set_cats = set()
+    all_mets: list[Metadata] = []
+    set_cats: set[str] = set()
     for path in norg_dir.iterdir():
         if path.suffix != ".norg":
             continue
