@@ -1,0 +1,44 @@
+INFO:neorg-lsp:base.method='initialize'
+INFO:neorg-lsp:Initializing LSP...
+INFO:neorg-lsp:base.method='initialized'
+INFO:neorg-lsp:base.method='shutdown'
+INFO:neorg-lsp:Shutting down...
+INFO:neorg-lsp:base.method='exit'
+INFO:neorg-lsp:Exiting
+INFO:neorg-lsp:base.method='initialize'
+INFO:neorg-lsp:Initializing LSP...
+INFO:neorg-lsp:base.method='initialized'
+INFO:neorg-lsp:base.method='shutdown'
+INFO:neorg-lsp:Shutting down...
+INFO:neorg-lsp:base.method='exit'
+INFO:neorg-lsp:Exiting
+INFO:neorg-lsp:base.method='initialize'
+INFO:neorg-lsp:Initializing LSP...
+INFO:neorg-lsp:base.method='initialized'
+INFO:neorg-lsp:base.method='initialize'
+INFO:neorg-lsp:Initializing LSP...
+INFO:neorg-lsp:base.method='initialized'
+INFO:neorg-lsp:base.method='shutdown'
+INFO:neorg-lsp:Shutting down...
+INFO:neorg-lsp:base.method='exit'
+INFO:neorg-lsp:Exiting
+INFO:neorg-lsp:base.method='shutdown'
+INFO:neorg-lsp:Shutting down...
+INFO:neorg-lsp:base.method='exit'
+INFO:neorg-lsp:Exiting
+INFO:neorg-lsp:base.method='initialize'
+INFO:neorg-lsp:Initializing LSP...
+INFO:neorg-lsp:base.method='initialized'
+INFO:neorg-lsp:base.method='shutdown'
+INFO:neorg-lsp:Shutting down...
+INFO:neorg-lsp:base.method='exit'
+INFO:neorg-lsp:Exiting
+INFO:neorg-lsp:base.method='initialize'
+INFO:neorg-lsp:Initializing LSP...
+INFO:neorg-lsp:base.method='initialize'
+INFO:neorg-lsp:Initializing LSP...
+INFO:neorg-lsp:base.method='initialized'
+INFO:neorg-lsp:base.method='shutdown'
+INFO:neorg-lsp:Shutting down...
+INFO:neorg-lsp:base.method='exit'
+INFO:neorg-lsp:Exiting

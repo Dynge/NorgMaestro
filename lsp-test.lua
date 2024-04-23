@@ -4,7 +4,7 @@ if vim.fn.has("nvim-0.5.1") == 1 then
 end
 
 local client_id = vim.lsp.start_client({
-	name = "oh no",
+	name = "NeorgLsp",
 	filetypes = { "neorg" },
 	cmd = {
 		"/home/michael/.cache/pypoetry/virtualenvs/neorg-lsp-mE_f2NLl-py3.11/bin/python",
@@ -14,5 +14,7 @@ local client_id = vim.lsp.start_client({
 	trace = "verbose",
 })
 
-local neorg_buffer = 0
-vim.lsp.buf_attach_client(neorg_buffer, client_id)
+if client_id ~= nil then
+	local neorg_buffer = 0
+	vim.lsp.buf_attach_client(neorg_buffer, client_id)
+end

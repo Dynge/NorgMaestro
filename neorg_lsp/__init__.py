@@ -1,7 +1,7 @@
 import json
-import time
 import logging
 import re
+import time
 from sys import stdin
 from sys import stdout
 from typing import Any
@@ -43,6 +43,12 @@ def send_message(response: Any) -> None:
     stdout.buffer.flush()
 
 
+def send_notification(message: str, level: int = 1) -> None:
+    send_message(
+        BaseNotification("window/showMessage", {"type": level, "message": message})
+    )
+
+
 # TODO: Implement State
 # TODO: Implement textOpen and textEdit to populate references and categories
 
@@ -70,14 +76,11 @@ if __name__ == "__main__":
             req = cattrs.structure(base.params, InitializeRequest)
             response = handle_init(base, req)
             send_message(response)
-            send_message(
-                BaseNotification(
-                    "window/showMessage", {"type": 1, "message": f"Hello from Lsp. Timestamp: {time.time()}"}
-                )
-            )
+            send_notification(f"Hello from Lsp. Timestamp: {time.time()}")
 
         elif base.method == LspMethods.SHUTDOWN.value:
             log.info("Shutting down...")
+            send_notification("WHYYYY")
             base = decode_message(content, BaseRequest)
             send_message(
                 BaseResponse(
@@ -88,5 +91,5 @@ if __name__ == "__main__":
             )
         elif base.method == LspMethods.EXIT.value:
             log.info("Exiting")
+            send_notification("BYEEEEEE")
             exit()
-
