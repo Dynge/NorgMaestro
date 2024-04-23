@@ -5,6 +5,7 @@ from neorg_lsp.methods import LspMethod, NoopHandler, ResponseHandler
 from neorg_lsp.methods.completion import CompletionHandler
 from neorg_lsp.methods.exit_ import ExitHandler
 from neorg_lsp.methods.shutdown import ShutdownHandler
+from neorg_lsp.methods.initialize import InitializeHandler
 from neorg_lsp.rpc import BaseRequest
 from neorg_lsp.rpc.completion import CompletionRequest
 from neorg_lsp.rpc.initialize import InitializeRequest
@@ -24,8 +25,6 @@ class MethodHandlerFactory:
         except ValueError:
             log.warn(f"Not a known LSP method: {method_value}")
             return NoopHandler()
-
-        from neorg_lsp.methods.initialize import InitializeHandler
 
         handler: Callable[[], ResponseHandler] | None = {
             LspMethod.INITIALIZE: lambda: InitializeHandler(

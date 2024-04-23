@@ -54,7 +54,6 @@ class State:
                 first_lines = list(itertools.islice(f.readlines(), 50))
                 metadata_text = get_metadata_text(b"".join(first_lines))
                 cats = get_categories(metadata_text)
-                log.debug(f"{cats=}")
                 title = get_title(metadata_text)
                 self.documents[path.as_uri()] = TextDocumentState(
                     title=title,

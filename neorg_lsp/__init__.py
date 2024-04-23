@@ -4,11 +4,7 @@ from sys import stdin
 
 
 from neorg_lsp.methods.factory import MethodHandlerFactory
-from neorg_lsp.rpc import (
-    BaseNotification,
-    BaseRequest,
-    IncomingMessage,
-)
+from neorg_lsp.rpc import IncomingMessage
 from neorg_lsp.state import State
 
 logging.basicConfig(filename="wow.log", level=logging.DEBUG)
@@ -17,12 +13,9 @@ log = logging.getLogger("neorg-lsp")
 
 # TODO: Implement State
 # TODO: Implement textOpen and textEdit to populate references and categories
-
-
 lspState = State()
 
 if __name__ == "__main__":
-    timeout = 1
     buffer = b""
     while stdin.readable():
         buffer = buffer + stdin.buffer.read(1)
@@ -37,10 +30,7 @@ if __name__ == "__main__":
         buffer = b""
         content_length = int(match_header.group(1))
         content = stdin.buffer.read(content_length)
-        log.info(f"{content=}")
-
         base = IncomingMessage.decode(content)
-        log.info(f"{base.method=}")
 
         handler = MethodHandlerFactory(lspState).create_handler(base.method, content)
         handler.handle_request()

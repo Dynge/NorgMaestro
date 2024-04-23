@@ -4,9 +4,6 @@ from typing import Protocol
 
 from attrs import define
 
-from neorg_lsp.rpc import BaseResponse
-from neorg_lsp.state import State
-
 log = logging.getLogger("neorg_lsp")
 
 
