@@ -1,8 +1,7 @@
 using System.Text;
 using System.Text.Json;
-using CeorgLsp.Rpc;
 
-namespace CeorgLsp
+namespace CeorgLsp.Rpc
 {
     public class RpcMessageWriter
     {
@@ -24,7 +23,7 @@ namespace CeorgLsp
 
         public Request? Decode()
         {
-            using StreamReader streamReader = new(Stdin, System.Text.Encoding.UTF8);
+            using StreamReader streamReader = new(Stdin, Encoding.UTF8);
             char[] buffer = new char[MaxBuffer];
             _ = streamReader.ReadBlock(buffer, 0, ContentLengthHeader.Length);
             char[] headerSize = buffer[..ContentLengthHeader.Length];
