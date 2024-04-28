@@ -1,8 +1,8 @@
 using CeorgLsp.Rpc;
 
-namespace CeorgLsp.Method
+namespace CeorgLsp.Methods
 {
-    public class InitializationHandler : IMessageHandler
+    public class InitializeHandler : IMessageHandler
     {
         public required Request Request { get; init; }
 
@@ -11,16 +11,17 @@ namespace CeorgLsp.Method
             InitializeResultParams res =
                 new()
                 {
-                    Result = new()
+                    Capabilities = new()
                     {
-                        Capabilities = new()
+                        CompletionProvider = new()
                         {
-                            CompletionProvider = new() { TriggerCharacters = ['æ', 'ø', 'å'] }
+                            ResolveProvider = false,
+                            TriggerCharacters = ['æ', 'ø', 'å']
                         }
                     }
                 };
 
-            return Response.From(1, res, null);
+            return Response.OfSuccess(Request.Id, res);
         }
     }
 }

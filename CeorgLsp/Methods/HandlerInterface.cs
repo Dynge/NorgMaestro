@@ -1,6 +1,6 @@
 using CeorgLsp.Rpc;
 
-namespace CeorgLsp.Method
+namespace CeorgLsp.Methods
 {
     public interface IMessageHandler
     {

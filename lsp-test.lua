@@ -4,7 +4,7 @@ if vim.fn.has("nvim-0.5.1") == 1 then
 end
 
 local python_client = {
-name = "NeorgLsp",
+	name = "NeorgLsp",
 	filetypes = { "norg" },
 	cmd = {
 		"/home/michael/.cache/pypoetry/virtualenvs/neorg-lsp-mE_f2NLl-py3.11/bin/python",
@@ -15,6 +15,7 @@ name = "NeorgLsp",
 }
 
 local csharp_client = {
+	name = "NeorgLsp2",
 	filetypes = { "norg" },
 	cmd = {
 		"/home/michael/git/neorg-lsp/CeorgLsp/bin/Debug/net8.0/CeorgLsp",
@@ -24,9 +25,9 @@ local csharp_client = {
 }
 
 local client_id = vim.lsp.start_client(csharp_client)
+print(client_id)
 
 if client_id ~= nil then
 	local neorg_buffer = 1
 	vim.lsp.buf_attach_client(neorg_buffer, client_id)
 end
-

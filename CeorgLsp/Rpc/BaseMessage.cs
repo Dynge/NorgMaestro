@@ -6,7 +6,7 @@ namespace CeorgLsp.Rpc
     public record Message
     {
         [JsonPropertyName("jsonrpc")]
-        public const string JsonRpc = "2.0";
+        public required string JsonRpc { get; init; }
     }
 
     public record MessageWithId : Message
@@ -32,14 +32,39 @@ namespace CeorgLsp.Rpc
         [JsonPropertyName("error")]
         public JsonElement? Error { get; init; }
 
-        public static Response From(int id, object? res, object? err)
+        public static Response OfSuccess(int id, object res)
         {
             return new()
             {
+                JsonRpc = "2.0",
                 Id = id,
                 Result = JsonSerializer.SerializeToElement(res),
+            };
+        }
+
+        public static Response OfError(int id, object err)
+        {
+            return new()
+            {
+                JsonRpc = "2.0",
+                Id = id,
                 Error = JsonSerializer.SerializeToElement(err)
             };
         }
+    }
+
+    public record RpcMessage
+    {
+        [JsonPropertyName("jsonrpc")]
+        public required string JsonRpc { get; init; }
+
+        [JsonPropertyName("id")]
+        public int Id { get; init; }
+
+        [JsonPropertyName("method")]
+        public required string Method { get; init; }
+
+        [JsonPropertyName("params")]
+        public JsonElement? Params { get; init; }
     }
 }

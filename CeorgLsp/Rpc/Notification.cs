@@ -9,6 +9,15 @@ namespace CeorgLsp.Rpc
 
         [JsonPropertyName("params")]
         public NotificationParams? Params { get; init; }
+
+        public static Notification Default(string message, int type)
+        {
+            return new()
+            {
+                JsonRpc = "2.0",
+                Params = new() { Message = message, Type = type }
+            };
+        }
     }
 
     public record NotificationParams
@@ -16,7 +25,7 @@ namespace CeorgLsp.Rpc
         [JsonPropertyName("message")]
         public required string Message { get; init; }
 
-        [JsonPropertyName("level")]
-        public int Level { get; init; } = 1;
+        [JsonPropertyName("type")]
+        public int Type { get; init; } = 1;
     }
 }
