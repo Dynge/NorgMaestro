@@ -3,7 +3,7 @@ using CeorgLsp.Rpc;
 
 namespace CeorgLsp
 {
-    public class StartLsp
+    public class NeorgLspServer
     {
         public static void Main()
         {
