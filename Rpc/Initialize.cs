@@ -3,8 +3,11 @@ using System.Text.Json.Serialization;
 
 namespace CeorgLsp.Rpc
 {
-    public record InitializeRequest : Request
+    public record InitializeRequest : RpcMessage
     {
+        [JsonPropertyName("id")]
+        public new required int Id { get; init; }
+
         [JsonPropertyName("params")]
         public new InitializeRequestParams Params { get; init; }
 

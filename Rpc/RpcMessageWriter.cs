@@ -4,12 +4,22 @@ using System.Text.Json.Serialization;
 
 namespace CeorgLsp.Rpc
 {
-    public class RpcMessageWriter
+    public interface IRpcWriter
     {
-        public StreamReader Reader { get; init; }
-        public StreamWriter Writer { get; init; }
+        public void EncodeAndWrite(object o);
+    }
 
-        public RpcMessageWriter(Stream read, Stream write)
+    public interface IRpcReader
+    {
+        public RpcMessage? Decode();
+    }
+
+    public class RpcMessageReaderWriter : IRpcReader, IRpcWriter
+    {
+        private StreamReader Reader { get; init; }
+        private StreamWriter Writer { get; init; }
+
+        public RpcMessageReaderWriter(Stream read, Stream write)
         {
             Reader = new(read, Encoding.UTF8);
             Writer = new(write, Encoding.UTF8) { AutoFlush = true };

@@ -14,18 +14,20 @@ namespace CeorgLsp.Methods
             public const string Exit = "exit";
         }
 
-        public required RpcMessageWriter Writer { get; init; }
+        public required IRpcWriter Writer { get; init; }
+        public required LanguageServerState State { get; init; }
 
         public IMessageHandler CreateHandler(RpcMessage req)
         {
+            Console.WriteLine($"Size of Docs: {State.Documents.Count}");
             IMessageHandler handler = req.Method switch
             {
                 MethodType.Shutdown => new ShutdownHandler() { Request = req, Writer = Writer },
                 MethodType.Exit => new ExitHandler() { Writer = Writer },
-                MethodType.DidSave => new EmptyHandler() { Request = req },
+                MethodType.DidSave => new DidSaveHandler() { Request = req, State = State },
                 MethodType.Initialize => new InitializeHandler() { Request = req, },
                 MethodType.Initialized => new InitializedHandler() { Writer = Writer, },
-                MethodType.Completion => new CompletionHandler() { Request = req },
+                MethodType.Completion => new CompletionHandler() { Request = req, State = State },
                 _ => new CantHandler() { Request = req, Writer = Writer },
             };
 

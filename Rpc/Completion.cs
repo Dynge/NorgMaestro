@@ -3,10 +3,13 @@ using System.Text.Json.Serialization;
 
 namespace CeorgLsp.Rpc
 {
-    public record CompletionRequest : Request
+    public record CompletionRequest : RpcMessage
     {
+        [JsonPropertyName("id")]
+        public new required int Id { get; init; }
+
         [JsonPropertyName("params")]
-        public new CompletionRequestParams Params { get; init; }
+        public new required CompletionRequestParams Params { get; init; }
 
         public static CompletionRequest From(RpcMessage message)
         {
@@ -15,12 +18,12 @@ namespace CeorgLsp.Rpc
                 JsonRpc = message.JsonRpc,
                 Id = message.Id!.Value,
                 Method = message.Method,
-                Params = message.Params!.Value.Deserialize<CompletionRequestParams>()
+                Params = message.Params!.Value.Deserialize<CompletionRequestParams>()!
             };
         }
     }
 
-    public readonly record struct CompletionRequestParams
+    public record CompletionRequestParams
     {
         [JsonPropertyName("textDocument")]
         public required TextDocument TextDocument { get; init; }
@@ -32,13 +35,13 @@ namespace CeorgLsp.Rpc
         public JsonElement? CompletionContext { get; init; }
     }
 
-    public readonly record struct TextDocument
+    public record TextDocument
     {
         [JsonPropertyName("uri")]
         public required Uri Uri { get; init; }
     }
 
-    public readonly record struct Position
+    public record Position
     {
         [JsonPropertyName("line")]
         public required uint Line { get; init; }
@@ -47,7 +50,7 @@ namespace CeorgLsp.Rpc
         public required uint Character { get; init; }
     }
 
-    public readonly record struct CompletionItem
+    public record CompletionItem
     {
         [JsonPropertyName("label")]
         public required string Label { get; init; }
@@ -56,7 +59,7 @@ namespace CeorgLsp.Rpc
         public MarkupContent? LabelDetails { get; init; }
     }
 
-    public readonly record struct MarkupContent
+    public record MarkupContent
     {
         [JsonPropertyName("kind")]
         public required string MarkupKind { get; init; }

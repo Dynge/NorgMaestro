@@ -5,7 +5,7 @@ namespace CeorgLsp.Methods
     public class CantHandler : IMessageHandler
     {
         public required RpcMessage Request { get; init; }
-        public required RpcMessageWriter Writer { get; init; }
+        public required IRpcWriter Writer { get; init; }
 
         public Response? HandleRequest()
         {

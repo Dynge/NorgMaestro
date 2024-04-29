@@ -9,23 +9,11 @@ namespace CeorgLsp.Rpc
         public required string JsonRpc { get; init; }
     }
 
-    public record MessageWithId : Message
+    public record Response : Message
     {
         [JsonPropertyName("id")]
         public required int Id { get; init; }
-    }
 
-    public record Request : MessageWithId
-    {
-        [JsonPropertyName("method")]
-        public required string Method { get; init; }
-
-        [JsonPropertyName("params")]
-        public JsonElement? Params { get; init; }
-    }
-
-    public record Response : MessageWithId
-    {
         [JsonPropertyName("result")]
         public JsonElement? Result { get; init; }
 
@@ -53,11 +41,8 @@ namespace CeorgLsp.Rpc
         }
     }
 
-    public record RpcMessage
+    public record RpcMessage : Message
     {
-        [JsonPropertyName("jsonrpc")]
-        public required string JsonRpc { get; init; }
-
         [JsonPropertyName("id")]
         public int? Id { get; init; }
 

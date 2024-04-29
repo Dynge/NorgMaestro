@@ -1,4 +1,3 @@
-using CeorgLsp.Parser;
 using CeorgLsp.Rpc;
 
 namespace CeorgLsp.Methods
@@ -6,41 +5,25 @@ namespace CeorgLsp.Methods
     public class CompletionHandler : IMessageHandler
     {
         public required RpcMessage Request { get; init; }
+        public required LanguageServerState State { get; init; }
 
         public Response HandleRequest()
         {
             CompletionRequest completionRequest = CompletionRequest.From(Request);
-            List<CompletionItem> res = new([]);
+            HashSet<CompletionItem> res = new([]);
 
-            NeorgMetadata metadata = NorgParser.GetMetadata(
-                completionRequest.Params.TextDocument.Uri
-            );
-            foreach (string category in metadata.Categories)
+            foreach (Document doc in State.Documents.Values)
             {
-                res.Add(new() { Label = category });
+                if (doc.Uri.Equals(completionRequest.Params.TextDocument.Uri))
+                {
+                    continue;
+                }
+                IEnumerable<CompletionItem> completionItems = doc.Metadata.Categories.Select(
+                    c => new CompletionItem() { Label = c }
+                );
+                res.UnionWith(completionItems);
             }
             return Response.OfSuccess(completionRequest.Id, res);
         }
     }
-
-    // string[] notes = Directory.GetFiles("/home/michael/notes/");
-    // foreach (string note_path in notes)
-    // {
-    //     if (Path.GetExtension(note_path) is not "norg")
-    //     {
-    //         continue;
-    //     }
-    //
-    //
-    //     if (note_path.SequenceEqual(completionParams.TextDocument.Uri.LocalPath))
-    //     {
-    //         continue;
-    //     }
-    //
-    //     NeorgMetadata metadata = NorgParser.GetMetadata(new Uri(note_path));
-    //     foreach (string category in metadata.Categories)
-    //     {
-    //         res.Add(new() { Label = category });
-    //     }
-    // }
 }

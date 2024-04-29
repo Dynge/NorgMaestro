@@ -7,9 +7,10 @@ namespace CeorgLsp
     {
         public static void Main()
         {
-            RpcMessageWriter writer =
+            RpcMessageReaderWriter writer =
                 new(Console.OpenStandardInput(), Console.OpenStandardOutput());
-            HandlerFactory handlerFactory = new() { Writer = writer };
+            LanguageServerState state = new();
+            HandlerFactory handlerFactory = new() { Writer = writer, State = state };
             while (true)
             {
                 RpcMessage? req = writer.Decode();

@@ -30,7 +30,7 @@ namespace CeorgLsp.Parser
                 using StreamReader streamReader = new(fs, true);
 
                 string? line = streamReader.ReadLine()?.Trim();
-                bool foundMetadata = true;
+                bool foundMetadata = false;
                 bool insideMetadata = false;
                 while (line is not null)
                 {

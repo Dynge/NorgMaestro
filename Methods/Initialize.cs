@@ -28,7 +28,7 @@ namespace CeorgLsp.Methods
 
     public class InitializedHandler : IMessageHandler
     {
-        public required RpcMessageWriter Writer { get; init; }
+        public required IRpcWriter Writer { get; init; }
 
         public Response? HandleRequest()
         {
