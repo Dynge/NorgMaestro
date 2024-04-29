@@ -6,13 +6,19 @@ namespace CeorgLsp.Rpc
     public readonly record struct CompletionRequestParams
     {
         [JsonPropertyName("textDocument")]
-        public required Uri TextDocument { get; init; }
+        public required TextDocument TextDocument { get; init; }
 
-        [JsonPropertyName("postion")]
+        [JsonPropertyName("position")]
         public required Position Postion { get; init; }
 
         [JsonPropertyName("completionContext")]
         public JsonElement? CompletionContext { get; init; }
+    }
+
+    public readonly record struct TextDocument
+    {
+        [JsonPropertyName("uri")]
+        public required Uri Uri { get; init; }
     }
 
     public readonly record struct Position
@@ -22,12 +28,6 @@ namespace CeorgLsp.Rpc
 
         [JsonPropertyName("character")]
         public required uint Character { get; init; }
-    }
-
-    public readonly record struct CompletionResult
-    {
-        [JsonPropertyName("result")]
-        public required CompletionItem[] Result { get; init; }
     }
 
     public readonly record struct CompletionItem

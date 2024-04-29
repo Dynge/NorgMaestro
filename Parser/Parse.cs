@@ -1,19 +1,19 @@
 namespace CeorgLsp.Parser
 {
+    public record NeorgMetadata
+    {
+        public required Uri FileUri { get; init; }
+        public string Title { get; init; } = "";
+        public string Description { get; init; } = "";
+        public string Authors { get; init; } = "";
+        public string[] Categories { get; init; } = [];
+        public string Created { get; init; } = "";
+        public string Updated { get; init; } = "";
+        public string Version { get; init; } = "";
+    }
+
     public class NorgParser
     {
-        public readonly record struct NeorgMetadata
-        {
-            public Uri? FileUri { get; init; }
-            public string? Title { get; init; }
-            public string? Description { get; init; }
-            public string? Authors { get; init; }
-            public string[]? Categories { get; init; }
-            public string? Created { get; init; }
-            public string? Updated { get; init; }
-            public string? Version { get; init; }
-        }
-
         public static NeorgMetadata GetMetadata(Uri fileUri)
         {
             NeorgMetadata metadata = new() { FileUri = fileUri };

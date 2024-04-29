@@ -6,31 +6,31 @@ namespace CeorgLsp.Rpc
 {
     public class RpcMessageWriter
     {
-        public required StreamReader StdinReader { get; init; }
-        public required Stream Stdout { get; init; }
+        public StreamReader Reader { get; init; }
+        public StreamWriter Writer { get; init; }
+
+        public RpcMessageWriter(Stream read, Stream write)
+        {
+            Reader = new(read, Encoding.UTF8);
+            Writer = new(write, Encoding.UTF8) { AutoFlush = true };
+        }
 
         private const string ContentLengthHeader = "Content-Length: ";
-        private const int MaxBuffer = 5000;
-        private readonly Func<byte[], string> StringOfLength = body =>
-            Convert.ToString(body.Length, System.Globalization.CultureInfo.InvariantCulture);
 
         private readonly JsonSerializerOptions options =
             new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
 
         public void EncodeAndWrite(object res)
         {
-            byte[] body = JsonSerializer.SerializeToUtf8Bytes(res, options);
-            IEnumerable<byte> rpcMessage = Encoding
-                .UTF8.GetBytes(ContentLengthHeader)
-                .Concat(Encoding.UTF8.GetBytes(StringOfLength(body)))
-                .Concat(Encoding.UTF8.GetBytes("\r\n\r\n"))
-                .Concat(body);
-            Stdout.Write(rpcMessage.ToArray());
+            string body = Encoding.UTF8.GetString(
+                JsonSerializer.SerializeToUtf8Bytes(res, options)
+            );
+            Writer.Write(string.Concat(ContentLengthHeader, body.Length, "\r\n\r\n", body));
         }
 
         public RpcMessage? Decode()
         {
-            string? header = StdinReader.ReadLine();
+            string? header = Reader.ReadLine();
             bool headerExists = header?.StartsWith(ContentLengthHeader) ?? false;
             if (headerExists is false)
             {
@@ -54,7 +54,7 @@ namespace CeorgLsp.Rpc
             }
             // Console.WriteLine("Content length is: " + contentLength);
 
-            string? newline = StdinReader.ReadLine();
+            string? newline = Reader.ReadLine();
             bool newLinesExists = newline?.SequenceEqual("") ?? false;
             if (newLinesExists is false)
             {
@@ -68,7 +68,7 @@ namespace CeorgLsp.Rpc
             }
 
             char[] buffer = new char[contentLength];
-            _ = StdinReader.Read(buffer, 0, contentLength);
+            _ = Reader.Read(buffer, 0, contentLength);
             string content = string.Concat(buffer);
 
             RpcMessage? pson = JsonSerializer.Deserialize<RpcMessage>(content);
