@@ -8,6 +8,7 @@ namespace CeorgLsp.Methods
 
         public Response HandleRequest()
         {
+            InitializeRequest initRequest = InitializeRequest.From(Request);
             InitializeResultParams res =
                 new()
                 {
@@ -21,7 +22,7 @@ namespace CeorgLsp.Methods
                     }
                 };
 
-            return Response.OfSuccess(Request.Id, res);
+            return Response.OfSuccess(initRequest.Id, res);
         }
     }
 

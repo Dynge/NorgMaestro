@@ -3,6 +3,23 @@ using System.Text.Json.Serialization;
 
 namespace CeorgLsp.Rpc
 {
+    public record CompletionRequest : Request
+    {
+        [JsonPropertyName("params")]
+        public new CompletionRequestParams Params { get; init; }
+
+        public static CompletionRequest From(RpcMessage message)
+        {
+            return new()
+            {
+                JsonRpc = message.JsonRpc,
+                Id = message.Id!.Value,
+                Method = message.Method,
+                Params = message.Params!.Value.Deserialize<CompletionRequestParams>()
+            };
+        }
+    }
+
     public readonly record struct CompletionRequestParams
     {
         [JsonPropertyName("textDocument")]

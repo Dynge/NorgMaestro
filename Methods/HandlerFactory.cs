@@ -9,6 +9,7 @@ namespace CeorgLsp.Methods
             public const string Initialize = "initialize";
             public const string Initialized = "initialized";
             public const string Completion = "textDocument/completion";
+            public const string DidSave = "textDocument/didSave";
             public const string Shutdown = "shutdown";
             public const string Exit = "exit";
         }
@@ -19,12 +20,13 @@ namespace CeorgLsp.Methods
         {
             IMessageHandler handler = req.Method switch
             {
-                MethodType.Shutdown => new ShutdownHandler() { Request = req },
-                MethodType.Exit => new ExitHandler(),
+                MethodType.Shutdown => new ShutdownHandler() { Request = req, Writer = Writer },
+                MethodType.Exit => new ExitHandler() { Writer = Writer },
+                MethodType.DidSave => new EmptyHandler() { Request = req },
                 MethodType.Initialize => new InitializeHandler() { Request = req, },
                 MethodType.Initialized => new InitializedHandler() { Writer = Writer, },
                 MethodType.Completion => new CompletionHandler() { Request = req },
-                _ => new NoneHandler() { Request = req, Writer = Writer },
+                _ => new CantHandler() { Request = req, Writer = Writer },
             };
 
             return handler;

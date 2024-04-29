@@ -1,4 +1,3 @@
-using System.Text.Json;
 using CeorgLsp.Parser;
 using CeorgLsp.Rpc;
 
@@ -10,16 +9,17 @@ namespace CeorgLsp.Methods
 
         public Response HandleRequest()
         {
-            CompletionRequestParams completionParams =
-                Request.Params!.Value.Deserialize<CompletionRequestParams>();
+            CompletionRequest completionRequest = CompletionRequest.From(Request);
             List<CompletionItem> res = new([]);
 
-            NeorgMetadata metadata = NorgParser.GetMetadata(completionParams.TextDocument.Uri);
+            NeorgMetadata metadata = NorgParser.GetMetadata(
+                completionRequest.Params.TextDocument.Uri
+            );
             foreach (string category in metadata.Categories)
             {
                 res.Add(new() { Label = category });
             }
-            return Response.OfSuccess(Request.Id, res);
+            return Response.OfSuccess(completionRequest.Id, res);
         }
     }
 

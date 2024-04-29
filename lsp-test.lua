@@ -18,7 +18,7 @@ local csharp_client = {
 	name = "NeorgLsp2",
 	filetypes = { "norg" },
 	cmd = {
-		"/home/michael/git/neorg-lsp/CeorgLsp/bin/Debug/net8.0/CeorgLsp",
+		"/home/michael/git/neorg-lsp/bin/Debug/net8.0/CeorgLsp",
 	},
 	root_dir = "/home/michael/notes/",
 	trace = "verbose",

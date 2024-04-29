@@ -9,6 +9,7 @@ namespace CeorgLsp
         {
             RpcMessageWriter writer =
                 new(Console.OpenStandardInput(), Console.OpenStandardOutput());
+            HandlerFactory handlerFactory = new() { Writer = writer };
             while (true)
             {
                 RpcMessage? req = writer.Decode();
@@ -19,9 +20,7 @@ namespace CeorgLsp
 
                 try
                 {
-                    Response? res = new HandlerFactory() { Writer = writer }
-                        .CreateHandler(req)
-                        ?.HandleRequest();
+                    Response? res = handlerFactory.CreateHandler(req)?.HandleRequest();
                     if (res is not null)
                     {
                         writer.EncodeAndWrite(res);

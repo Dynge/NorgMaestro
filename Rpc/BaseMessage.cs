@@ -59,7 +59,7 @@ namespace CeorgLsp.Rpc
         public required string JsonRpc { get; init; }
 
         [JsonPropertyName("id")]
-        public int Id { get; init; }
+        public int? Id { get; init; }
 
         [JsonPropertyName("method")]
         public required string Method { get; init; }
