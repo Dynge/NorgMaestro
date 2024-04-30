@@ -1,17 +1,9 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <Version>0.1</Version>
     <TargetFramework>net8.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
-
-  <ItemGroup>
-    <PackageReference Include="ClangSharp" Version="17.0.1" />
-    <PackageReference Include="json.net" Version="1.0.33" />
-    <PackageReference Include="Treesitter" Version="1.0.0" />
-    <PackageReference Include="TreeSitter.Bindings" Version="0.0.3-alpha.0.1" />
-  </ItemGroup>
-
 </Project>
