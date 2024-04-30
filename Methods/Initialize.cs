@@ -5,10 +5,12 @@ namespace CeorgLsp.Methods
     public class InitializeHandler : IMessageHandler
     {
         public required RpcMessage Request { get; init; }
+        public required LanguageServerState State { get; init; }
 
         public Response HandleRequest()
         {
             InitializeRequest initRequest = InitializeRequest.From(Request);
+            State.Initialize(initRequest.Params.RootUri);
             InitializeResultParams res =
                 new()
                 {
@@ -18,7 +20,10 @@ namespace CeorgLsp.Methods
                         {
                             ResolveProvider = false,
                             TriggerCharacters = ['æ', 'ø', 'å']
-                        }
+                        },
+                        WorkspaceSymbolProvider = true,
+                        ReferencesProvider = true,
+                        CallHierarchyProvider = true,
                     }
                 };
 

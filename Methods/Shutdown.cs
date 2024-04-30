@@ -10,7 +10,7 @@ namespace CeorgLsp.Methods
         public Response? HandleRequest()
         {
             Writer.EncodeAndWrite(Notification.Default("Shutting down...", 2));
-            return Response.OfSuccess(Request.Id ?? 0, "");
+            return Response.OfSuccess(Request.Id! ?? 0);
         }
     }
 

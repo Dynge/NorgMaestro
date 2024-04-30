@@ -14,11 +14,16 @@ namespace CeorgLsp.Rpc
         [JsonPropertyName("id")]
         public required int Id { get; init; }
 
-        [JsonPropertyName("result")]
+        [JsonPropertyName("result"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public JsonElement? Result { get; init; }
 
-        [JsonPropertyName("error")]
+        [JsonPropertyName("error"), JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingDefault)]
         public JsonElement? Error { get; init; }
+
+        public static Response OfSuccess(int id)
+        {
+            return new() { JsonRpc = "2.0", Id = id };
+        }
 
         public static Response OfSuccess(int id, object res)
         {
@@ -26,7 +31,7 @@ namespace CeorgLsp.Rpc
             {
                 JsonRpc = "2.0",
                 Id = id,
-                Result = JsonSerializer.SerializeToElement(res),
+                Result = JsonSerializer.SerializeToElement(res)
             };
         }
 

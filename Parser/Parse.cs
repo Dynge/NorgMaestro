@@ -1,3 +1,6 @@
+using System.Text.RegularExpressions;
+using CeorgLsp.Rpc;
+
 namespace CeorgLsp.Parser
 {
     public record NeorgMetadata
@@ -12,7 +15,7 @@ namespace CeorgLsp.Parser
         public string Version { get; init; } = "";
     }
 
-    public class NorgParser
+    public partial class NorgParser
     {
         public static NeorgMetadata GetMetadata(Uri fileUri)
         {
@@ -95,5 +98,69 @@ namespace CeorgLsp.Parser
             }
             return metadata;
         }
+
+        public static Dictionary<Uri, HashSet<Location>> GetReferences(
+            Uri fileUri,
+            string[] content
+        )
+        {
+            // - `:path/to/norg/file:` relative to the file which contains this link
+            // - `:/path/from/root:` absolute w.r.t. the entire filesystem
+            // - `:~/path/from/user/home:` relative to the user's home directory (e.g. `/home/user` on Linux machines)
+            // - `:../path/to/norg/file:` these paths also understand `../`
+
+            // TODO: Handle relative to workspaces
+            // - `:$/path/from/current/workspace:` relative to current workspace root
+            // - `:$gtd/path/in/gtd/workspace:` relative to the root of the workspace called `gtd`.
+            Dictionary<Uri, HashSet<Location>> references = [];
+            uint lineNumber = 0;
+            foreach (string line in content)
+            {
+                Regex regex = NorgFileLinkRegex();
+                MatchCollection matches = regex.Matches(line);
+                foreach (Match match in matches.AsEnumerable())
+                {
+                    string path = Path.Join(match.Groups[1].Value + ".norg");
+                    Uri uriMatch = path.StartsWith("/") switch
+                    {
+                        true => new("file://" + path),
+                        false
+                            => new(
+                                "file://"
+                                    + Path.Join(
+                                        Directory.GetParent(fileUri.AbsolutePath)!.FullName,
+                                        path
+                                    )
+                            )
+                    };
+
+                    Location refLocation =
+                        new()
+                        {
+                            Uri = fileUri.AbsoluteUri,
+                            Range = new()
+                            {
+                                Start = new() { Line = lineNumber, Character = (uint)match.Index },
+                                End = new()
+                                {
+                                    Line = lineNumber,
+                                    Character = (uint)(match.Index + match.Length)
+                                }
+                            }
+                        };
+                    references[uriMatch] = references.TryGetValue(
+                        uriMatch,
+                        out HashSet<Location>? value
+                    )
+                        ? ([.. value, refLocation])
+                        : ([refLocation]);
+                }
+                lineNumber++;
+            }
+            return references;
+        }
+
+        [GeneratedRegex(@"{:((\w|[-./~])+):}")]
+        public static partial Regex NorgFileLinkRegex();
     }
 }

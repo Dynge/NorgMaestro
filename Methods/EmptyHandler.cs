@@ -11,7 +11,7 @@ namespace CeorgLsp.Methods
             return Request.Id switch
             {
                 null => null,
-                int id => Response.OfSuccess(id, "")
+                int id => Response.OfSuccess(id)
             };
         }
     }

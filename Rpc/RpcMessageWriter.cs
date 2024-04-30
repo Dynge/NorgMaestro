@@ -1,6 +1,5 @@
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace CeorgLsp.Rpc
 {
@@ -27,14 +26,9 @@ namespace CeorgLsp.Rpc
 
         private const string ContentLengthHeader = "Content-Length: ";
 
-        private readonly JsonSerializerOptions options =
-            new() { DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull };
-
-        public void EncodeAndWrite(object res)
+        public void EncodeAndWrite(object o)
         {
-            string body = Encoding.UTF8.GetString(
-                JsonSerializer.SerializeToUtf8Bytes(res, options)
-            );
+            string body = Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(o));
             Writer.Write(string.Concat(ContentLengthHeader, body.Length, "\r\n\r\n", body));
         }
 

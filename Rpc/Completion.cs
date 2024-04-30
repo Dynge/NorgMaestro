@@ -35,21 +35,6 @@ namespace CeorgLsp.Rpc
         public JsonElement? CompletionContext { get; init; }
     }
 
-    public record TextDocument
-    {
-        [JsonPropertyName("uri")]
-        public required Uri Uri { get; init; }
-    }
-
-    public record Position
-    {
-        [JsonPropertyName("line")]
-        public required uint Line { get; init; }
-
-        [JsonPropertyName("character")]
-        public required uint Character { get; init; }
-    }
-
     public record CompletionItem
     {
         [JsonPropertyName("label")]
@@ -57,20 +42,5 @@ namespace CeorgLsp.Rpc
 
         [JsonPropertyName("documentation")]
         public MarkupContent? LabelDetails { get; init; }
-    }
-
-    public record MarkupContent
-    {
-        [JsonPropertyName("kind")]
-        public required string MarkupKind { get; init; }
-
-        [JsonPropertyName("value")]
-        public required string Value { get; init; }
-    }
-
-    public enum MarkupKind
-    {
-        plaintext,
-        markdown
     }
 }

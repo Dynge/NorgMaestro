@@ -28,8 +28,8 @@ namespace CeorgLsp.Rpc
         [JsonPropertyName("capabilities")]
         public JsonElement? Capabilities { get; init; }
 
-        [JsonPropertyName("rootPath")]
-        public string? RootPath { get; init; }
+        [JsonPropertyName("rootUri")]
+        public Uri RootUri { get; init; }
 
         [JsonPropertyName("processId")]
         public int? ProcessId { get; init; }
@@ -48,6 +48,15 @@ namespace CeorgLsp.Rpc
     {
         [JsonPropertyName("completionProvider")]
         public CompletionOptions? CompletionProvider { get; init; }
+
+        [JsonPropertyName("workspaceSymbolProvider")]
+        public bool? WorkspaceSymbolProvider { get; init; }
+
+        [JsonPropertyName("referencesProvider")]
+        public bool? ReferencesProvider { get; init; }
+
+        [JsonPropertyName("callHierarchyProvider")]
+        public bool? CallHierarchyProvider { get; init; }
     }
 
     public readonly record struct InitializeResultParams
