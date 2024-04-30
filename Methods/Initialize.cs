@@ -37,7 +37,7 @@ namespace CeorgLsp.Methods
 
         public Response? HandleRequest()
         {
-            Writer.EncodeAndWrite(Notification.Default("Initialized!", 4));
+            Writer.EncodeAndWrite(Notification.Default("Initialized!", MessageType.Debug));
             return null;
         }
     }

@@ -1,6 +1,4 @@
-﻿using System.Text;
-using System.Text.Json;
-using CeorgLsp.Methods;
+﻿using CeorgLsp.Methods;
 using CeorgLsp.Rpc;
 
 namespace CeorgLsp
@@ -26,13 +24,6 @@ namespace CeorgLsp
                     Response? res = handlerFactory.CreateHandler(req)?.HandleRequest();
                     if (res is not null)
                     {
-                        writer.EncodeAndWrite(
-                            Notification.Default(
-                                Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(res)),
-                                1
-                            )
-                        );
-
                         writer.EncodeAndWrite(res);
                     }
                 }

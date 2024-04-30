@@ -9,7 +9,7 @@ namespace CeorgLsp.Methods
 
         public Response? HandleRequest()
         {
-            Writer.EncodeAndWrite(Notification.Default("Shutting down...", 2));
+            Writer.EncodeAndWrite(Notification.Default("Shutting down..."));
             return Response.OfSuccess(Request.Id! ?? 0);
         }
     }
@@ -20,7 +20,7 @@ namespace CeorgLsp.Methods
 
         public Response? HandleRequest()
         {
-            Writer.EncodeAndWrite(Notification.Default("Goodbye!", 2));
+            Writer.EncodeAndWrite(Notification.Default("Goodbye!"));
             throw new InvalidDataException("Shutting down.");
         }
     }

@@ -9,7 +9,9 @@ namespace CeorgLsp.Methods
 
         public Response? HandleRequest()
         {
-            Writer.EncodeAndWrite(Notification.Default($"Cannot handle '{Request.Method}'!!.", 1));
+            Writer.EncodeAndWrite(
+                Notification.Default($"Cannot handle '{Request.Method}'!!.", MessageType.Warning)
+            );
             return null;
         }
     }
