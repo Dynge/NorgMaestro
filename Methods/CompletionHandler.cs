@@ -1,6 +1,6 @@
-using CeorgLsp.Rpc;
+using NorgMaestro.Rpc;
 
-namespace CeorgLsp.Methods
+namespace NorgMaestro.Methods
 {
     public class CompletionHandler : IMessageHandler
     {
@@ -19,7 +19,7 @@ namespace CeorgLsp.Methods
                     continue;
                 }
                 IEnumerable<CompletionItem> completionItems = doc.Metadata.Categories.Select(
-                    c => new CompletionItem() { Label = c }
+                    c => new CompletionItem() { Label = c.Name }
                 );
                 res.UnionWith(completionItems);
             }

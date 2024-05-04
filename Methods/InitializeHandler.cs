@@ -1,6 +1,6 @@
-using CeorgLsp.Rpc;
+using NorgMaestro.Rpc;
 
-namespace CeorgLsp.Methods
+namespace NorgMaestro.Methods
 {
     public class InitializeHandler : IMessageHandler
     {
@@ -24,6 +24,7 @@ namespace CeorgLsp.Methods
                         WorkspaceSymbolProvider = true,
                         ReferencesProvider = true,
                         CallHierarchyProvider = true,
+                        RenameProvider = true,
                     }
                 };
 

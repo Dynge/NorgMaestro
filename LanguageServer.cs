@@ -1,7 +1,7 @@
-﻿using CeorgLsp.Methods;
-using CeorgLsp.Rpc;
+﻿using NorgMaestro.Methods;
+using NorgMaestro.Rpc;
 
-namespace CeorgLsp
+namespace NorgMaestro
 {
     public class NeorgLspServer
     {

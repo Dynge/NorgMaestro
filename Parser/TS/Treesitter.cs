@@ -3,7 +3,7 @@
 //
 // using static TreeSitter.Bindings.TSBindings;
 //
-// namespace CeorgLsp.TS
+// namespace NorgMaestro.TS
 // {
 //     // using TreeSitter;
 //     internal unsafe class NorgLanguage

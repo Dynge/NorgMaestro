@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace CeorgLsp.Rpc
+namespace NorgMaestro.Rpc
 {
     public record IncomingCallsRequest : RpcMessage
     {
@@ -35,6 +35,6 @@ namespace CeorgLsp.Rpc
         public required CallHierarchyItem From { get; init; }
 
         [JsonPropertyName("fromRanges")]
-        public required Range[] FromRanges { get; init; }
+        public required TextRange[] FromRanges { get; init; }
     }
 }

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace CeorgLsp.Rpc
+namespace NorgMaestro.Rpc
 {
     public record InitializeRequest : RpcMessage
     {
@@ -57,6 +57,9 @@ namespace CeorgLsp.Rpc
 
         [JsonPropertyName("callHierarchyProvider")]
         public bool? CallHierarchyProvider { get; init; }
+
+        [JsonPropertyName("renameProvider")]
+        public bool? RenameProvider { get; init; }
     }
 
     public readonly record struct InitializeResultParams

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace CeorgLsp.Rpc
+namespace NorgMaestro.Rpc
 {
     public record DidSaveNotification : RpcMessage
     {

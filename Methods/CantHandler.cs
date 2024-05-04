@@ -1,6 +1,6 @@
-using CeorgLsp.Rpc;
+using NorgMaestro.Rpc;
 
-namespace CeorgLsp.Methods
+namespace NorgMaestro.Methods
 {
     public class CantHandler : IMessageHandler
     {

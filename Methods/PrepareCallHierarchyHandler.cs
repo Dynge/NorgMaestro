@@ -1,6 +1,6 @@
-using CeorgLsp.Rpc;
+using NorgMaestro.Rpc;
 
-namespace CeorgLsp.Methods
+namespace NorgMaestro.Methods
 {
     public class PrepareCallHierarchyHandler : IMessageHandler
     {
@@ -15,7 +15,7 @@ namespace CeorgLsp.Methods
             [
                 new CallHierarchyItem()
                 {
-                    Name = doc.Metadata.Title,
+                    Name = doc.Metadata.Title?.Name ?? "",
                     Kind = SymbolKind.File,
                     Uri = doc.Uri.AbsolutePath,
                     Range = new()

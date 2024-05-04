@@ -1,7 +1,7 @@
-using CeorgLsp.Parser;
-using CeorgLsp.Rpc;
+using NorgMaestro.Parser;
+using NorgMaestro.Rpc;
 
-namespace CeorgLsp
+namespace NorgMaestro
 {
     public class LanguageServerState
     {

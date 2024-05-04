@@ -1,6 +1,6 @@
-using CeorgLsp.Rpc;
+using NorgMaestro.Rpc;
 
-namespace CeorgLsp.Methods
+namespace NorgMaestro.Methods
 {
     public class HandlerFactory
     {
@@ -9,6 +9,7 @@ namespace CeorgLsp.Methods
             public const string Initialize = "initialize";
             public const string Initialized = "initialized";
             public const string Completion = "textDocument/completion";
+            public const string Rename = "textDocument/rename";
             public const string WorkspaceSymbols = "workspace/symbol";
             public const string References = "textDocument/references";
             public const string IncomingCalls = "callHierarchy/incomingCalls";
@@ -31,6 +32,7 @@ namespace CeorgLsp.Methods
                 MethodType.Initialize => new InitializeHandler() { Request = req, State = State },
                 MethodType.Initialized => new InitializedHandler() { Writer = Writer, },
                 MethodType.Completion => new CompletionHandler() { Request = req, State = State },
+                MethodType.Rename => new RenameHandler() { Request = req, State = State },
                 MethodType.PrepareCallHierarchy
                     => new PrepareCallHierarchyHandler() { Request = req, State = State },
                 MethodType.IncomingCalls

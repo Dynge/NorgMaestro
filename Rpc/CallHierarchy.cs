@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace CeorgLsp.Rpc
+namespace NorgMaestro.Rpc
 {
     public record CallHierarchyItem
     {
@@ -17,9 +17,9 @@ namespace CeorgLsp.Rpc
         public required string Uri { get; init; }
 
         [JsonPropertyName("range")]
-        public required Range Range { get; init; }
+        public required TextRange Range { get; init; }
 
         [JsonPropertyName("selectionRange")]
-        public required Range SelectionRange { get; init; }
+        public required TextRange SelectionRange { get; init; }
     }
 }

@@ -1,6 +1,6 @@
-using CeorgLsp.Rpc;
+using NorgMaestro.Rpc;
 
-namespace CeorgLsp.Methods
+namespace NorgMaestro.Methods
 {
     public class WorkspaceSymbolHandler : IMessageHandler
     {
@@ -26,7 +26,7 @@ namespace CeorgLsp.Methods
                             Uri = doc.Uri.AbsoluteUri,
                         },
                         Kind = SymbolKind.File,
-                        Name = doc.Metadata.Title,
+                        Name = doc.Metadata.Title?.Name ?? "",
                     }
                 );
             }

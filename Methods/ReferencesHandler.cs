@@ -1,8 +1,8 @@
 using System.Text.RegularExpressions;
-using CeorgLsp.Parser;
-using CeorgLsp.Rpc;
+using NorgMaestro.Parser;
+using NorgMaestro.Rpc;
 
-namespace CeorgLsp.Methods
+namespace NorgMaestro.Methods
 {
     public class ReferencesHandler : IMessageHandler
     {
@@ -23,11 +23,6 @@ namespace CeorgLsp.Methods
                 .Matches(line)
                 .FirstOrDefault(m => m.Index <= charPos && m.Index + m.Length >= charPos);
 
-            File.AppendAllText(
-                "/home/michael/git/neorg-lsp/log.txt",
-                $"CursorMatch={cursorUriMatch}"
-            );
-
             if (cursorUriMatch is null || cursorUriMatch.Success is false)
             {
                 return Response.OfSuccess(referenceRequest.Id);
@@ -38,14 +33,10 @@ namespace CeorgLsp.Methods
                         Directory
                             .GetParent(referenceRequest.Params.TextDocument.Uri.AbsolutePath)!
                             .FullName,
-                        cursorUriMatch.Groups[1].Value + ".norg"
+                        cursorUriMatch.Groups["File"].Value + ".norg"
                     )
                 );
 
-            File.AppendAllText(
-                "/home/michael/git/neorg-lsp/log.txt",
-                $"CursorUri={cursorUri.AbsolutePath}"
-            );
             HashSet<Location> references = State.References.GetValueOrDefault(cursorUri, []);
             if (referenceRequest.Params.Context.IncludeDeclaration)
             {
