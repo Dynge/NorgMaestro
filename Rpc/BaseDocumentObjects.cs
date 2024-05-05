@@ -41,6 +41,14 @@ namespace NorgMaestro.Rpc
         public required uint Character { get; init; }
     }
 
+    public record MarkedString
+    {
+        [JsonPropertyName("language")]
+        public required string Language { get; init; }
+
+        [JsonPropertyName("value")]
+        public required string Value { get; init; }
+    }
     public record MarkupContent
     {
         [JsonPropertyName("kind")]
@@ -50,9 +58,9 @@ namespace NorgMaestro.Rpc
         public required string Value { get; init; }
     }
 
-    public enum MarkupKind
+    public record MarkupKind
     {
-        plaintext,
-        markdown
+        public const string PlainText = "plaintext";
+        public const string Markdown = "markdown";
     }
 }

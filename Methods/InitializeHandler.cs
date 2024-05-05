@@ -25,6 +25,7 @@ namespace NorgMaestro.Methods
                         ReferencesProvider = true,
                         CallHierarchyProvider = true,
                         RenameProvider = true,
+                        HoverProvider = true,
                     }
                 };
 

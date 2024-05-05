@@ -58,6 +58,8 @@ namespace NorgMaestro.Rpc
         [JsonPropertyName("callHierarchyProvider")]
         public bool? CallHierarchyProvider { get; init; }
 
+        [JsonPropertyName("hoverProvider")]
+        public bool? HoverProvider { get; init; }
         [JsonPropertyName("renameProvider")]
         public bool? RenameProvider { get; init; }
     }

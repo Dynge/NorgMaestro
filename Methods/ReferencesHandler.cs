@@ -12,8 +12,19 @@ namespace NorgMaestro.Methods
         {
             ReferencesRequest referenceRequest = ReferencesRequest.From(Request);
 
-            string line = File.ReadLines(referenceRequest.Params.TextDocument.Uri.AbsolutePath)
-                .Skip((int)referenceRequest.Params.Position.Line)
+
+            // string line = File.ReadLines(referenceRequest.Params.TextDocument.Uri.AbsolutePath)
+            //     .Skip((int)referenceRequest.Params.Position.Line)
+            //     .FirstOrDefault("");
+            string line = FileUtil
+                .ReadRange(
+                    referenceRequest.Params.TextDocument.Uri,
+                    new()
+                    {
+                        Start = referenceRequest.Params.Position,
+                        End = referenceRequest.Params.Position
+                    }
+                )
                 .FirstOrDefault("");
 
             NorgLink? link = NorgParser.ParseLink(

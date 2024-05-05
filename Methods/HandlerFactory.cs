@@ -15,6 +15,7 @@ namespace NorgMaestro.Methods
             public const string IncomingCalls = "callHierarchy/incomingCalls";
             public const string PrepareCallHierarchy = "textDocument/prepareCallHierarchy";
             public const string DidSave = "textDocument/didSave";
+            public const string Hover = "textDocument/hover";
             public const string Shutdown = "shutdown";
             public const string Exit = "exit";
         }
@@ -32,6 +33,7 @@ namespace NorgMaestro.Methods
                 MethodType.Initialize => new InitializeHandler() { Request = req, State = State },
                 MethodType.Initialized => new InitializedHandler() { Writer = Writer, },
                 MethodType.Completion => new CompletionHandler() { Request = req, State = State },
+                MethodType.Hover => new HoverHandler() { Request = req, State = State },
                 MethodType.Rename => new RenameHandler() { Request = req, State = State },
                 MethodType.PrepareCallHierarchy
                     => new PrepareCallHierarchyHandler() { Request = req, State = State },
