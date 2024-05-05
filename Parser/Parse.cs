@@ -86,7 +86,7 @@ namespace NorgMaestro.Parser
                             matchEnd = (uint)(match.Index + match.Length);
                             metadata = metadata with
                             {
-                                Title = new()
+                                Authors = new()
                                 {
                                     Name = line[(int)matchEnd..],
                                     Range = new()
@@ -154,13 +154,15 @@ namespace NorgMaestro.Parser
                                 line = streamReader.ReadLine();
                                 lineNr++;
                             }
+
+                            metadata = metadata with { Categories = [.. categories] };
                             break;
                         case string when NorgMetaCreated().Matches(line).Count > 0:
                             match = NorgMetaCreated().Matches(line).First();
                             matchEnd = (uint)(match.Index + match.Length);
                             metadata = metadata with
                             {
-                                Title = new()
+                                Created = new()
                                 {
                                     Name = line[(int)matchEnd..],
                                     Range = new()
@@ -176,7 +178,7 @@ namespace NorgMaestro.Parser
                             matchEnd = (uint)(match.Index + match.Length);
                             metadata = metadata with
                             {
-                                Title = new()
+                                Updated = new()
                                 {
                                     Name = line[(int)matchEnd..],
                                     Range = new()
@@ -192,7 +194,7 @@ namespace NorgMaestro.Parser
                             matchEnd = (uint)(match.Index + match.Length);
                             metadata = metadata with
                             {
-                                Title = new()
+                                Version = new()
                                 {
                                     Name = line[(int)matchEnd..],
                                     Range = new()
@@ -220,7 +222,7 @@ namespace NorgMaestro.Parser
             return metadata;
         }
 
-        public static Dictionary<Uri, HashSet<Location>> GetReferences(
+        public static Dictionary<Uri, HashSet<ReferenceLocation>> GetReferences(
             Uri fileUri,
             string[] content
         )
@@ -233,45 +235,26 @@ namespace NorgMaestro.Parser
             // TODO: Handle relative to workspaces
             // - `:$/path/from/current/workspace:` relative to current workspace root
             // - `:$gtd/path/in/gtd/workspace:` relative to the root of the workspace called `gtd`.
-            Dictionary<Uri, HashSet<Location>> references = [];
+            Dictionary<Uri, HashSet<ReferenceLocation>> references = [];
             uint lineNumber = 0;
             foreach (string line in content)
             {
-                Regex regex = NorgFileLinkRegex();
-                MatchCollection matches = regex.Matches(line);
-                foreach (Match match in matches.AsEnumerable())
+                NorgLink[] norgLinks = ParseLinks(fileUri, lineNumber, line);
+                foreach (NorgLink link in norgLinks)
                 {
-                    string path = Path.Join(match.Groups["File"].Value + ".norg");
-                    Uri uriMatch = path.StartsWith('/') switch
-                    {
-                        true => new("file://" + path),
-                        false
-                            => new(
-                                "file://"
-                                    + Path.Join(
-                                        Directory.GetParent(fileUri.AbsolutePath)!.FullName,
-                                        path
-                                    )
-                            )
-                    };
-
-                    Location refLocation =
+                    ReferenceLocation refLocation =
                         new()
                         {
-                            Uri = fileUri.AbsoluteUri,
-                            Range = new()
+                            Line = line,
+                            Location = new()
                             {
-                                Start = new() { Line = lineNumber, Character = (uint)match.Index },
-                                End = new()
-                                {
-                                    Line = lineNumber,
-                                    Character = (uint)(match.Index + match.Length)
-                                }
-                            }
+                                Uri = fileUri.AbsoluteUri,
+                                Range = link.AbsoluteRange
+                            },
                         };
-                    references[uriMatch] = references.TryGetValue(
-                        uriMatch,
-                        out HashSet<Location>? value
+                    references[link.GetFileLinkUri()] = references.TryGetValue(
+                        link.GetFileLinkUri(),
+                        out HashSet<ReferenceLocation>? value
                     )
                         ? ([.. value, refLocation])
                         : ([refLocation]);
@@ -279,6 +262,22 @@ namespace NorgMaestro.Parser
                 lineNumber++;
             }
             return references;
+        }
+
+        public static NorgLink[] ParseLinks(Uri fileUri, uint lineNr, string line)
+        {
+            MatchCollection matches = NorgFileLinkRegex().Matches(line);
+            return matches.Select(m => NorgLink.From(fileUri, lineNr, m)).ToArray();
+        }
+
+        public static NorgLink? ParseLink(Uri fileUri, Position position, string line)
+        {
+            Match? match = NorgFileLinkRegex()
+                .Matches(line)
+                .FirstOrDefault(m =>
+                    m.Index <= position.Character && m.Index + m.Length >= position.Character
+                );
+            return match is null ? null : NorgLink.From(fileUri, position.Line, match);
         }
 
         [GeneratedRegex(@"{:(?<File>(\w|[-./~])+):}\[(?<LinkText>.+)\]")]
@@ -304,5 +303,65 @@ namespace NorgMaestro.Parser
 
         [GeneratedRegex(@"^version: ")]
         private static partial Regex NorgMetaVersion();
+    }
+
+    public record NorgLink
+    {
+        public required Uri NorgFile { get; init; }
+        public required string File { get; init; }
+        public required string LinkText { get; init; }
+        public required TextRange FileRange { get; init; }
+        public required TextRange LinkTextRange { get; init; }
+        public required TextRange AbsoluteRange { get; init; }
+
+        public Uri GetFileLinkUri()
+        {
+            return File.StartsWith('/') switch
+            {
+                true => new("file://" + File + ".norg"),
+                false
+                    => new(
+                        "file://"
+                            + Path.Join(Directory.GetParent(NorgFile.AbsolutePath)!.FullName, File)
+                            + ".norg"
+                    )
+            };
+        }
+
+        public static NorgLink From(Uri fileUri, uint lineNr, Match match)
+        {
+            Group fileGroup = match.Groups["File"];
+            Group linkTextGroup = match.Groups["LinkText"];
+            return new()
+            {
+                NorgFile = fileUri,
+                File = fileGroup.Value,
+                FileRange = new()
+                {
+                    Start = new() { Line = lineNr, Character = (uint)fileGroup.Index },
+                    End = new()
+                    {
+                        Line = lineNr,
+                        Character = (uint)(fileGroup.Index + fileGroup.Length)
+                    },
+                },
+
+                LinkText = linkTextGroup.Value,
+                LinkTextRange = new()
+                {
+                    Start = new() { Line = lineNr, Character = (uint)linkTextGroup.Index },
+                    End = new()
+                    {
+                        Line = lineNr,
+                        Character = (uint)(linkTextGroup.Index + linkTextGroup.Length)
+                    },
+                },
+                AbsoluteRange = new()
+                {
+                    Start = new() { Line = lineNr, Character = (uint)match.Index },
+                    End = new() { Line = lineNr, Character = (uint)(match.Index + match.Length) },
+                }
+            };
+        }
     }
 }

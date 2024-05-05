@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using NorgMaestro.Parser;
 using NorgMaestro.Rpc;
 
@@ -18,30 +17,18 @@ namespace NorgMaestro.Methods
                 .FirstOrDefault("");
 
             uint charPos = renameRequest.Params.Position.Character;
-            Match? cursorUriMatch = NorgParser
-                .NorgFileLinkRegex()
-                .Matches(line)
-                .FirstOrDefault(m => m.Index <= charPos && m.Index + m.Length >= charPos);
+            NorgLink? link = NorgParser.ParseLink(
+                renameRequest.Params.TextDocument.Uri,
+                renameRequest.Params.Position,
+                line
+            );
 
-            if (cursorUriMatch is null || cursorUriMatch.Success is false)
+            if (link is null)
             {
                 return Response.OfSuccess(renameRequest.Id);
             }
 
-            Group fileGroup = cursorUriMatch.Groups["File"];
-            Group linkTextGroup = cursorUriMatch.Groups["LinkText"];
-
-            Uri cursorUri =
-                new(
-                    Path.Join(
-                        Directory
-                            .GetParent(renameRequest.Params.TextDocument.Uri.AbsolutePath)!
-                            .FullName,
-                        fileGroup.Value + ".norg"
-                    )
-                );
-
-            Document cursorDocument = State.Documents[cursorUri];
+            Document cursorDocument = State.Documents[link.GetFileLinkUri()];
             TextEdit[] changeInCursor = cursorDocument.Metadata.Title switch
             {
                 MetaField titleField
@@ -53,28 +40,34 @@ namespace NorgMaestro.Methods
             };
 
             Dictionary<string, TextEdit[]> changeInRefs = State
-                .References[cursorUri]
-                .ToLookup(loc => loc.Uri)
+                .References[link.GetFileLinkUri()]
+                .ToLookup(reference => reference.Location.Uri)
                 .ToDictionary(
                     kvp => kvp.Key,
                     kvp =>
                         kvp.ToList()
-                            .Select(loc => new TextEdit()
+                            .Select(reference => new TextEdit()
                             {
                                 NewText = renameRequest.Params.NewName,
-                                Range = loc.Range
+                                Range = NorgParser
+                                    .ParseLink(
+                                        link.GetFileLinkUri(),
+                                        reference.Location.Range.Start,
+                                        reference.Line
+                                    )!
+                                    .LinkTextRange
                             })
                             .ToArray()
                 );
 
-            _ = changeInRefs.TryGetValue(cursorUri.AbsoluteUri, out TextEdit[]? value);
+            _ = changeInRefs.TryGetValue(link.GetFileLinkUri().AbsoluteUri, out TextEdit[]? value);
             List<TextEdit> textEdits = value switch
             {
                 TextEdit[] => [.. value],
                 _ => [],
             };
             textEdits.AddRange(changeInCursor);
-            changeInRefs[cursorUri.AbsoluteUri] = [.. textEdits];
+            changeInRefs[link.GetFileLinkUri().AbsoluteUri] = [.. textEdits];
 
             WorkspaceEdit edit = new() { Changes = changeInRefs };
 

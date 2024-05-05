@@ -1,4 +1,3 @@
-using System.Text.RegularExpressions;
 using NorgMaestro.Parser;
 using NorgMaestro.Rpc;
 
@@ -17,33 +16,27 @@ namespace NorgMaestro.Methods
                 .Skip((int)referenceRequest.Params.Position.Line)
                 .FirstOrDefault("");
 
-            uint charPos = referenceRequest.Params.Position.Character;
-            Match? cursorUriMatch = NorgParser
-                .NorgFileLinkRegex()
-                .Matches(line)
-                .FirstOrDefault(m => m.Index <= charPos && m.Index + m.Length >= charPos);
+            NorgLink? link = NorgParser.ParseLink(
+                referenceRequest.Params.TextDocument.Uri,
+                referenceRequest.Params.Position,
+                line
+            );
 
-            if (cursorUriMatch is null || cursorUriMatch.Success is false)
+            if (link is null)
             {
                 return Response.OfSuccess(referenceRequest.Id);
             }
-            Uri cursorUri =
-                new(
-                    Path.Join(
-                        Directory
-                            .GetParent(referenceRequest.Params.TextDocument.Uri.AbsolutePath)!
-                            .FullName,
-                        cursorUriMatch.Groups["File"].Value + ".norg"
-                    )
-                );
 
-            HashSet<Location> references = State.References.GetValueOrDefault(cursorUri, []);
+            HashSet<Location> references = State
+                .References.GetValueOrDefault(link.GetFileLinkUri(), [])
+                .Select(reference => reference.Location)
+                .ToHashSet();
             if (referenceRequest.Params.Context.IncludeDeclaration)
             {
                 _ = references.Add(
                     new()
                     {
-                        Uri = cursorUri.AbsoluteUri,
+                        Uri = link.GetFileLinkUri().AbsoluteUri,
                         Range = new()
                         {
                             Start = new() { Line = 0, Character = 0, },

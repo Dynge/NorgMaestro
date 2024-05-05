@@ -11,20 +11,20 @@ namespace NorgMaestro.Methods
         {
             IncomingCallsRequest completionRequest = IncomingCallsRequest.From(Request);
 
-            HashSet<Location> refs = State.References[new(completionRequest.Params.Item.Uri)];
+            HashSet<ReferenceLocation> refs = State.References[new(completionRequest.Params.Item.Uri)];
 
             List<IncomingCallsResponseParams> response = refs.Select(
-                    loc => new IncomingCallsResponseParams()
+                    reference => new IncomingCallsResponseParams()
                     {
                         From = new()
                         {
-                            Uri = loc.Uri,
+                            Uri = reference.Location.Uri,
                             Name = "file",
                             Kind = SymbolKind.File,
-                            Range = loc.Range,
-                            SelectionRange = loc.Range
+                            Range = reference.Location.Range,
+                            SelectionRange = reference.Location.Range
                         },
-                        FromRanges = [loc.Range],
+                        FromRanges = [reference.Location.Range],
                     }
                 )
                 .ToList();

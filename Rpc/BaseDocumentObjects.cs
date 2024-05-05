@@ -8,6 +8,12 @@ namespace NorgMaestro.Rpc
         public required Uri Uri { get; init; }
     }
 
+    public record ReferenceLocation
+    {
+        public required string Line { get; init; }
+        public required Location Location { get; init; }
+    }
+
     public record Location
     {
         [JsonPropertyName("uri")]

@@ -6,7 +6,7 @@ namespace NorgMaestro
     public class LanguageServerState
     {
         public Dictionary<Uri, Document> Documents { get; init; } = [];
-        public Dictionary<Uri, HashSet<Location>> References { get; init; } = [];
+        public Dictionary<Uri, HashSet<ReferenceLocation>> References { get; init; } = [];
         private readonly object _updateDocLock = new();
 
         public void Initialize(Uri rootUri)
@@ -26,7 +26,7 @@ namespace NorgMaestro
         {
             NeorgMetadata metadata = NorgParser.GetMetadata(fileUri);
             string[] content = File.ReadAllLines(fileUri.LocalPath);
-            Dictionary<Uri, HashSet<Location>> references = NorgParser.GetReferences(
+            Dictionary<Uri, HashSet<ReferenceLocation>> references = NorgParser.GetReferences(
                 fileUri,
                 content
             );
@@ -41,11 +41,11 @@ namespace NorgMaestro
             lock (_updateDocLock)
             {
                 Documents[fileUri] = doc;
-                foreach (KeyValuePair<Uri, HashSet<Location>> refKvp in references)
+                foreach (KeyValuePair<Uri, HashSet<ReferenceLocation>> refKvp in references)
                 {
                     References[refKvp.Key] = References.TryGetValue(
                         refKvp.Key,
-                        out HashSet<Location>? value
+                        out HashSet<ReferenceLocation>? value
                     )
                         ? ([.. value, .. refKvp.Value])
                         : ([.. refKvp.Value]);
