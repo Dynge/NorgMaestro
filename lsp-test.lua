@@ -9,12 +9,12 @@ local csharp_client = {
 	cmd = {
         vim.env.HOME .. "/git/NorgMaestro/bin/Debug/net8.0/NorgMaestro",
 	},
-	root_dir = "/home/michael/notes/",
+    root_dir = vim.env.HOME .. "/notes/",
 	trace = "verbose",
 }
 
 local client_id = vim.lsp.start_client(csharp_client)
-print(client_id)
+vim.print(client_id)
 
 if client_id ~= nil then
 	local neorg_buffer = 1
