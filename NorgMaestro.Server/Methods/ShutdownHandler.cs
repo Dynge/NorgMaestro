@@ -7,10 +7,10 @@ namespace NorgMaestro.Methods
         public required RpcMessage Request { get; init; }
         public required IRpcWriter Writer { get; init; }
 
-        public Response? HandleRequest()
+        public Response HandleRequest()
         {
             Writer.EncodeAndWrite(Notification.Default("Shutting down..."));
-            return Response.OfSuccess(Request.Id! ?? 0);
+            return Response.OfSuccess(Request.Id ?? 0);
         }
     }
 
