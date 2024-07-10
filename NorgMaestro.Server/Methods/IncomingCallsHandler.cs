@@ -14,17 +14,21 @@ namespace NorgMaestro.Methods
             HashSet<ReferenceLocation> refs = State.References[new(completionRequest.Params.Item.Uri)];
 
             List<IncomingCallsResponseParams> response = refs.Select(
-                    reference => new IncomingCallsResponseParams()
+                    reference =>
+                    {
+                    State.Documents.TryGetValue(new(reference.Location.Uri), out var doc);
+                    return new IncomingCallsResponseParams()
                     {
                         From = new()
                         {
                             Uri = reference.Location.Uri,
-                            Name = "file",
+                            Name = doc?.Metadata.Title?.Name ?? "Unknown title",
                             Kind = SymbolKind.File,
                             Range = reference.Location.Range,
                             SelectionRange = reference.Location.Range
                         },
                         FromRanges = [reference.Location.Range],
+                    };
                     }
                 )
                 .ToList();
