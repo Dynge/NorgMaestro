@@ -39,8 +39,7 @@ namespace NorgMaestro.Parser
                 using StreamReader streamReader = new(fs, true);
 
                 string? line = streamReader.ReadLine()?.Trim();
-                bool foundMetadata = false;
-                bool insideMetadata = false;
+                bool? insideMetadata = null;
                 uint lineNr = 0;
                 while (line is not null)
                 {
@@ -52,16 +51,8 @@ namespace NorgMaestro.Parser
                     };
                     if (insideMetadata is false)
                     {
-                        if (foundMetadata is true)
-                        {
-                            break;
-                        }
-                        else
-                        {
-                            continue;
-                        }
+                        break;
                     }
-                    foundMetadata = true;
 
                     switch (line)
                     {
@@ -210,8 +201,11 @@ namespace NorgMaestro.Parser
                             break;
                     }
 
-                    line = streamReader.ReadLine();
-                    lineNr++;
+                    if (line is not null)
+                    {
+                        line = streamReader.ReadLine();
+                        lineNr++;
+                    }
                 }
                 if (insideMetadata is true)
                 {

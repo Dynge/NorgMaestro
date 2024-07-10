@@ -11,14 +11,15 @@ namespace NorgMaestro
 
         public void Initialize(Uri rootUri)
         {
-            string[] notes = Directory.GetFiles(rootUri.LocalPath);
-            foreach (string note in notes)
+            foreach (
+                string note in Directory.GetFiles(
+                    rootUri.LocalPath,
+                    "*.norg",
+                    SearchOption.AllDirectories
+                )
+            )
             {
-                if (Path.GetExtension(note) is not ".norg")
-                {
-                    continue;
-                }
-                _ = UpdateDocument(new Uri(note));
+                _ = UpdateDocument(new Uri(Path.GetFullPath(note)));
             }
         }
 
