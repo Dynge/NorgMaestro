@@ -11,11 +11,22 @@ namespace NorgMaestro.Methods
         {
             IncomingCallsRequest completionRequest = IncomingCallsRequest.From(Request);
 
-            HashSet<ReferenceLocation> refs = State.References[new(completionRequest.Params.Item.Uri)];
+            if (
+                State.References.TryGetValue(
+                    new Uri(completionRequest.Params.Item.Uri),
+                    out var refs
+                )
+                is false
+            )
+            {
+                return Response.OfSuccess(
+                    completionRequest.Id,
+                    new List<IncomingCallsResponseParams>()
+                );
+            }
 
-            List<IncomingCallsResponseParams> response = refs.Select(
-                    reference =>
-                    {
+            List<IncomingCallsResponseParams> response = refs.Select(reference =>
+                {
                     State.Documents.TryGetValue(new(reference.Location.Uri), out var doc);
                     return new IncomingCallsResponseParams()
                     {
@@ -29,8 +40,7 @@ namespace NorgMaestro.Methods
                         },
                         FromRanges = [reference.Location.Range],
                     };
-                    }
-                )
+                })
                 .ToList();
 
             return Response.OfSuccess(completionRequest.Id, response);
