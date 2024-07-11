@@ -1,77 +1,73 @@
 using NorgMaestro.Parser;
 using NorgMaestro.Rpc;
 
-namespace NorgMaestro.Methods
+namespace NorgMaestro.Methods;
+
+public class RenameHandler : IMessageHandler
 {
-    public class RenameHandler : IMessageHandler
+    public required RpcMessage Request { get; init; }
+    public required LanguageServerState State { get; init; }
+
+    public Response HandleRequest()
     {
-        public required RpcMessage Request { get; init; }
-        public required LanguageServerState State { get; init; }
+        RenameRequest renameRequest = RenameRequest.From(Request);
 
-        public Response HandleRequest()
+        string line = File.ReadLines(renameRequest.Params.TextDocument.Uri.AbsolutePath)
+            .Skip((int)renameRequest.Params.Position.Line)
+            .FirstOrDefault("");
+
+        uint charPos = renameRequest.Params.Position.Character;
+        NorgLink? link = NorgParser.ParseLink(
+            renameRequest.Params.TextDocument.Uri,
+            renameRequest.Params.Position,
+            line
+        );
+
+        if (link is null)
         {
-            RenameRequest renameRequest = RenameRequest.From(Request);
+            return Response.OfSuccess(renameRequest.Id);
+        }
 
-            string line = File.ReadLines(renameRequest.Params.TextDocument.Uri.AbsolutePath)
-                .Skip((int)renameRequest.Params.Position.Line)
-                .FirstOrDefault("");
+        Document cursorDocument = State.Documents[link.GetFileLinkUri()];
+        TextEdit[] changeInCursor = cursorDocument.Metadata.Title switch
+        {
+            MetaField titleField
+                => [new() { NewText = renameRequest.Params.NewName, Range = titleField.Range, }],
+            _ => [],
+        };
 
-            uint charPos = renameRequest.Params.Position.Character;
-            NorgLink? link = NorgParser.ParseLink(
-                renameRequest.Params.TextDocument.Uri,
-                renameRequest.Params.Position,
-                line
+        Dictionary<string, TextEdit[]> changeInRefs = State
+            .References[link.GetFileLinkUri()]
+            .ToLookup(reference => reference.Location.Uri)
+            .ToDictionary(
+                kvp => kvp.Key,
+                kvp =>
+                    kvp.ToList()
+                        .Select(reference => new TextEdit()
+                        {
+                            NewText = renameRequest.Params.NewName,
+                            Range = NorgParser
+                                .ParseLink(
+                                    link.GetFileLinkUri(),
+                                    reference.Location.Range.Start,
+                                    reference.Line
+                                )!
+                                .LinkTextRange
+                        })
+                        .ToArray()
             );
 
-            if (link is null)
-            {
-                return Response.OfSuccess(renameRequest.Id);
-            }
+        _ = changeInRefs.TryGetValue(link.GetFileLinkUri().AbsoluteUri, out TextEdit[]? value);
+        List<TextEdit> textEdits = value switch
+        {
+            TextEdit[] => [.. value],
+            _ => [],
+        };
+        textEdits.AddRange(changeInCursor);
+        changeInRefs[link.GetFileLinkUri().AbsoluteUri] = [.. textEdits];
 
-            Document cursorDocument = State.Documents[link.GetFileLinkUri()];
-            TextEdit[] changeInCursor = cursorDocument.Metadata.Title switch
-            {
-                MetaField titleField
-                    =>
-                    [
-                        new() { NewText = renameRequest.Params.NewName, Range = titleField.Range, }
-                    ],
-                _ => [],
-            };
+        WorkspaceEdit edit = new() { Changes = changeInRefs };
 
-            Dictionary<string, TextEdit[]> changeInRefs = State
-                .References[link.GetFileLinkUri()]
-                .ToLookup(reference => reference.Location.Uri)
-                .ToDictionary(
-                    kvp => kvp.Key,
-                    kvp =>
-                        kvp.ToList()
-                            .Select(reference => new TextEdit()
-                            {
-                                NewText = renameRequest.Params.NewName,
-                                Range = NorgParser
-                                    .ParseLink(
-                                        link.GetFileLinkUri(),
-                                        reference.Location.Range.Start,
-                                        reference.Line
-                                    )!
-                                    .LinkTextRange
-                            })
-                            .ToArray()
-                );
-
-            _ = changeInRefs.TryGetValue(link.GetFileLinkUri().AbsoluteUri, out TextEdit[]? value);
-            List<TextEdit> textEdits = value switch
-            {
-                TextEdit[] => [.. value],
-                _ => [],
-            };
-            textEdits.AddRange(changeInCursor);
-            changeInRefs[link.GetFileLinkUri().AbsoluteUri] = [.. textEdits];
-
-            WorkspaceEdit edit = new() { Changes = changeInRefs };
-
-            return Response.OfSuccess(renameRequest.Id, edit);
-        }
+        return Response.OfSuccess(renameRequest.Id, edit);
     }
 }

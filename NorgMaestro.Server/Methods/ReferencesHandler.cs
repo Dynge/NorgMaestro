@@ -1,67 +1,65 @@
 using NorgMaestro.Parser;
 using NorgMaestro.Rpc;
 
-namespace NorgMaestro.Methods
+namespace NorgMaestro.Methods;
+
+public class ReferencesHandler : IMessageHandler
 {
-    public class ReferencesHandler : IMessageHandler
+    public required RpcMessage Request { get; init; }
+    public required LanguageServerState State { get; init; }
+
+    public Response HandleRequest()
     {
-        public required RpcMessage Request { get; init; }
-        public required LanguageServerState State { get; init; }
+        ReferencesRequest referenceRequest = ReferencesRequest.From(Request);
 
-        public Response HandleRequest()
-        {
-            ReferencesRequest referenceRequest = ReferencesRequest.From(Request);
-
-
-            // string line = File.ReadLines(referenceRequest.Params.TextDocument.Uri.AbsolutePath)
-            //     .Skip((int)referenceRequest.Params.Position.Line)
-            //     .FirstOrDefault("");
-            string line = FileUtil
-                .ReadRange(
-                    referenceRequest.Params.TextDocument.Uri,
-                    new()
-                    {
-                        Start = referenceRequest.Params.Position,
-                        End = referenceRequest.Params.Position
-                    }
-                )
-                .FirstOrDefault("");
-
-            NorgLink? link = NorgParser.ParseLink(
+        // string line = File.ReadLines(referenceRequest.Params.TextDocument.Uri.AbsolutePath)
+        //     .Skip((int)referenceRequest.Params.Position.Line)
+        //     .FirstOrDefault("");
+        string line = FileUtil
+            .ReadRange(
                 referenceRequest.Params.TextDocument.Uri,
-                referenceRequest.Params.Position,
-                line
-            );
+                new()
+                {
+                    Start = referenceRequest.Params.Position,
+                    End = referenceRequest.Params.Position
+                }
+            )
+            .FirstOrDefault("");
 
-            if (link is null)
-            {
-                return Response.OfSuccess(referenceRequest.Id);
-            }
+        NorgLink? link = NorgParser.ParseLink(
+            referenceRequest.Params.TextDocument.Uri,
+            referenceRequest.Params.Position,
+            line
+        );
 
-            HashSet<Location> references = State
-                .References.GetValueOrDefault(link.GetFileLinkUri(), [])
-                .Select(reference => reference.Location)
-                .ToHashSet();
-            if (referenceRequest.Params.Context.IncludeDeclaration)
-            {
-                _ = references.Add(
-                    new()
-                    {
-                        Uri = link.GetFileLinkUri().AbsoluteUri,
-                        Range = new()
-                        {
-                            Start = new() { Line = 0, Character = 0, },
-                            End = new() { Line = 0, Character = 0, },
-                        }
-                    }
-                );
-            }
-
-            return (references.Count > 0) switch
-            {
-                true => Response.OfSuccess(referenceRequest.Id, references),
-                false => Response.OfSuccess(referenceRequest.Id),
-            };
+        if (link is null)
+        {
+            return Response.OfSuccess(referenceRequest.Id);
         }
+
+        HashSet<Location> references = State
+            .References.GetValueOrDefault(link.GetFileLinkUri(), [])
+            .Select(reference => reference.Location)
+            .ToHashSet();
+        if (referenceRequest.Params.Context.IncludeDeclaration)
+        {
+            _ = references.Add(
+                new()
+                {
+                    Uri = link.GetFileLinkUri().AbsoluteUri,
+                    Range = new()
+                    {
+                        Start = new() { Line = 0, Character = 0, },
+                        End = new() { Line = 0, Character = 0, },
+                    }
+                }
+            );
+        }
+
+        return (references.Count > 0) switch
+        {
+            true => Response.OfSuccess(referenceRequest.Id, references),
+            false => Response.OfSuccess(referenceRequest.Id),
+        };
     }
 }

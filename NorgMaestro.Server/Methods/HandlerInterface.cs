@@ -1,9 +1,8 @@
 using NorgMaestro.Rpc;
 
-namespace NorgMaestro.Methods
+namespace NorgMaestro.Methods;
+
+public interface IMessageHandler
 {
-    public interface IMessageHandler
-    {
-        public Response HandleRequest();
-    }
+    public Response HandleRequest();
 }

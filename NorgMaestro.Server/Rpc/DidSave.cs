@@ -1,27 +1,26 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NorgMaestro.Rpc
+namespace NorgMaestro.Rpc;
+
+public record DidSaveNotification : RpcMessage
 {
-    public record DidSaveNotification : RpcMessage
-    {
-        [JsonPropertyName("params")]
-        public new required DidSaveRequestParams Params { get; init; }
+    [JsonPropertyName("params")]
+    public new required DidSaveRequestParams Params { get; init; }
 
-        public static DidSaveNotification From(RpcMessage message)
+    public static DidSaveNotification From(RpcMessage message)
+    {
+        return new()
         {
-            return new()
-            {
-                JsonRpc = message.JsonRpc,
-                Method = message.Method,
-                Params = message.Params!.Value.Deserialize<DidSaveRequestParams>()!
-            };
-        }
+            JsonRpc = message.JsonRpc,
+            Method = message.Method,
+            Params = message.Params!.Value.Deserialize<DidSaveRequestParams>()!
+        };
     }
+}
 
-    public record DidSaveRequestParams
-    {
-        [JsonPropertyName("textDocument")]
-        public required TextDocument TextDocument { get; init; }
-    }
+public record DidSaveRequestParams
+{
+    [JsonPropertyName("textDocument")]
+    public required TextDocument TextDocument { get; init; }
 }

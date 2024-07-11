@@ -1,12 +1,11 @@
 using NorgMaestro.Rpc;
 
-namespace NorgMaestro.Methods
+namespace NorgMaestro.Methods;
+
+public class NoneHandler : IMessageHandler
 {
-    public class NoneHandler : IMessageHandler
+    public Response? HandleRequest()
     {
-        public Response? HandleRequest()
-        {
-            return null;
-        }
+        return null;
     }
 }
