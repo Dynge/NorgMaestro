@@ -72,6 +72,22 @@ public partial class NorgParser
                             }
                         };
                         break;
+                    case string when NorgMetaDescription().Matches(line).Count > 0:
+                        match = NorgMetaDescription().Matches(line).First();
+                        matchEnd = (uint)(match.Index + match.Length);
+                        metadata = metadata with
+                        {
+                            Description = new()
+                            {
+                                Name = line[(int)matchEnd..],
+                                Range = new()
+                                {
+                                    Start = new() { Line = lineNr, Character = matchEnd },
+                                    End = new() { Line = lineNr, Character = (uint)line.Length }
+                                }
+                            }
+                        };
+                        break;
                     case string when NorgMetaAuthors().Matches(line).Count > 0:
                         match = NorgMetaAuthors().Matches(line).First();
                         matchEnd = (uint)(match.Index + match.Length);

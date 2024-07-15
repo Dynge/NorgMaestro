@@ -35,6 +35,11 @@ public partial class WorkspaceSymbolHandler : IMessageHandler
         };
         foreach (Document doc in State.Documents.Values)
         {
+            var workspaceName = doc.Metadata.Title?.Name ?? "";
+            if (doc.Metadata.Description is not null)
+            {
+                workspaceName += $": {doc.Metadata.Description.Name}";
+            }
             var symbol = new WorkspaceSymbol()
             {
                 Location = new()
@@ -47,7 +52,7 @@ public partial class WorkspaceSymbolHandler : IMessageHandler
                     Uri = doc.Uri.AbsoluteUri,
                 },
                 Kind = SymbolKind.File,
-                Name = doc.Metadata.Title?.Name ?? "",
+                Name = workspaceName
             };
 
             if (filter(symbol) is false)
