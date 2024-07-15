@@ -7,7 +7,7 @@ public class IncomingCallsHandler : IMessageHandler
     public required RpcMessage Request { get; init; }
     public required LanguageServerState State { get; init; }
 
-    public Response HandleRequest()
+    public Response? HandleRequest()
     {
         IncomingCallsRequest completionRequest = IncomingCallsRequest.From(Request);
 

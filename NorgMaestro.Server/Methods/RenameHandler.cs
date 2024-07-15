@@ -8,7 +8,7 @@ public class RenameHandler : IMessageHandler
     public required RpcMessage Request { get; init; }
     public required LanguageServerState State { get; init; }
 
-    public Response HandleRequest()
+    public Response? HandleRequest()
     {
         RenameRequest renameRequest = RenameRequest.From(Request);
 

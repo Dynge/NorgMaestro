@@ -7,7 +7,7 @@ public class PrepareCallHierarchyHandler : IMessageHandler
     public required RpcMessage Request { get; init; }
     public required LanguageServerState State { get; init; }
 
-    public Response HandleRequest()
+    public Response? HandleRequest()
     {
         PrepareCallHierarchyRequest initRequest = PrepareCallHierarchyRequest.From(Request);
         Document doc = State.Documents[initRequest.Params.TextDocument.Uri];

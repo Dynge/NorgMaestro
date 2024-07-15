@@ -8,7 +8,7 @@ public class ReferencesHandler : IMessageHandler
     public required RpcMessage Request { get; init; }
     public required LanguageServerState State { get; init; }
 
-    public Response HandleRequest()
+    public Response? HandleRequest()
     {
         ReferencesRequest referenceRequest = ReferencesRequest.From(Request);
 

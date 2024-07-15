@@ -7,7 +7,7 @@ public class InitializeHandler : IMessageHandler
     public required RpcMessage Request { get; init; }
     public required LanguageServerState State { get; init; }
 
-    public Response HandleRequest()
+    public Response? HandleRequest()
     {
         InitializeRequest initRequest = InitializeRequest.From(Request);
         State.Initialize(initRequest.Params.RootUri);

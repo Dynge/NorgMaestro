@@ -7,7 +7,7 @@ public class CompletionHandler : IMessageHandler
     public required RpcMessage Request { get; init; }
     public required LanguageServerState State { get; init; }
 
-    public Response HandleRequest()
+    public Response? HandleRequest()
     {
         CompletionRequest completionRequest = CompletionRequest.From(Request);
         HashSet<CompletionItem> res = new([]);

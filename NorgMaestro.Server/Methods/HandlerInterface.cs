@@ -4,5 +4,5 @@ namespace NorgMaestro.Methods;
 
 public interface IMessageHandler
 {
-    public Response HandleRequest();
+    public Response? HandleRequest();
 }

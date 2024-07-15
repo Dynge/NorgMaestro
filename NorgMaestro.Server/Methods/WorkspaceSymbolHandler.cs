@@ -11,7 +11,7 @@ public partial class WorkspaceSymbolHandler : IMessageHandler
     [GeneratedRegex(@"^\[(\w+)\]")]
     private static partial Regex KindRegex();
 
-    public Response HandleRequest()
+    public Response? HandleRequest()
     {
         WorkspaceSymbolRequest workspaceRequest = WorkspaceSymbolRequest.From(Request);
         List<WorkspaceSymbol> symbols = [];
