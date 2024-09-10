@@ -1,6 +1,6 @@
-using NorgMaestro.Rpc;
+using NorgMaestro.Server.Rpc;
 
-namespace NorgMaestro.Parser;
+namespace NorgMaestro.Server.Parser;
 
 public static class FileUtil
 {

@@ -1,7 +1,7 @@
 using System.Text;
 using System.Text.Json;
 
-namespace NorgMaestro.Rpc;
+namespace NorgMaestro.Server.Rpc;
 
 public interface IRpcWriter
 {

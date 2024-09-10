@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NorgMaestro.Rpc;
+namespace NorgMaestro.Server.Rpc;
 
 public record PrepareCallHierarchyRequest : RpcMessage
 {

@@ -1,6 +1,6 @@
 using System.Text.Json.Serialization;
 
-namespace NorgMaestro.Rpc;
+namespace NorgMaestro.Server.Rpc;
 
 public record TextDocument
 {

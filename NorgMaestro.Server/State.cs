@@ -1,7 +1,7 @@
-using NorgMaestro.Parser;
-using NorgMaestro.Rpc;
+using NorgMaestro.Server.Parser;
+using NorgMaestro.Server.Rpc;
 
-namespace NorgMaestro;
+namespace NorgMaestro.Server;
 
 public class LanguageServerState
 {

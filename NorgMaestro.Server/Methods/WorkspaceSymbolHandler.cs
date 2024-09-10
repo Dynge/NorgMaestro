@@ -1,7 +1,7 @@
 using System.Text.RegularExpressions;
-using NorgMaestro.Rpc;
+using NorgMaestro.Server.Rpc;
 
-namespace NorgMaestro.Methods;
+namespace NorgMaestro.Server.Methods;
 
 public partial class WorkspaceSymbolHandler : IMessageHandler
 {

@@ -1,7 +1,7 @@
 using System.Text.Json;
 using System.Text.Json.Serialization;
 
-namespace NorgMaestro.Rpc;
+namespace NorgMaestro.Server.Rpc;
 
 public record CompletionRequest : RpcMessage
 {
@@ -18,7 +18,7 @@ public record CompletionRequest : RpcMessage
             JsonRpc = message.JsonRpc,
             Id = message.Id!.Value,
             Method = message.Method,
-            Params = message.Params!.Value.Deserialize<CompletionRequestParams>()!
+            Params = message.Params!.Value.Deserialize<CompletionRequestParams>()!,
         };
     }
 }
@@ -32,7 +32,23 @@ public record CompletionRequestParams
     public required Position Postion { get; init; }
 
     [JsonPropertyName("completionContext")]
-    public JsonElement? CompletionContext { get; init; }
+    public CompletionContext? CompletionContext { get; init; }
+}
+
+public record CompletionContext
+{
+    [JsonPropertyName("triggerKind")]
+    public required CompletionTriggerKind TriggerKind { get; init; }
+
+    [JsonPropertyName("triggerCharacter")]
+    public char TriggerCharacter { get; init; }
+}
+
+public enum CompletionTriggerKind
+{
+    Invoked = 1,
+    TriggerCharacter = 2,
+    TriggerForIncompleteCompletions = 3,
 }
 
 public record CompletionItem

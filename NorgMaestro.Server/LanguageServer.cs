@@ -1,19 +1,19 @@
-﻿using NorgMaestro.Methods;
-using NorgMaestro.Rpc;
+﻿using NorgMaestro.Server.Methods;
+using NorgMaestro.Server.Rpc;
 
-namespace NorgMaestro;
+namespace NorgMaestro.Server;
 
 public class NeorgLspServer
 {
     public static void Main()
     {
-        RpcMessageReaderWriter writer =
+        RpcMessageReaderWriter readerWriter =
             new(Console.OpenStandardInput(), Console.OpenStandardOutput());
         LanguageServerState state = new();
-        HandlerFactory handlerFactory = new() { Writer = writer, State = state };
+        HandlerFactory handlerFactory = new() { Writer = readerWriter, State = state };
         while (true)
         {
-            RpcMessage? req = writer.Decode();
+            RpcMessage? req = readerWriter.Decode();
             if (req is null)
             {
                 continue;
@@ -24,7 +24,7 @@ public class NeorgLspServer
                 Response? res = handlerFactory.CreateHandler(req)?.HandleRequest();
                 if (res is not null)
                 {
-                    writer.EncodeAndWrite(res);
+                    readerWriter.EncodeAndWrite(res);
                 }
             }
             catch (InvalidDataException)
