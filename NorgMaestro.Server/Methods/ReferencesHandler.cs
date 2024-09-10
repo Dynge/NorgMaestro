@@ -12,9 +12,6 @@ public class ReferencesHandler : IMessageHandler
     {
         ReferencesRequest referenceRequest = ReferencesRequest.From(Request);
 
-        // string line = File.ReadLines(referenceRequest.Params.TextDocument.Uri.AbsolutePath)
-        //     .Skip((int)referenceRequest.Params.Position.Line)
-        //     .FirstOrDefault("");
         string line = FileUtil
             .ReadRange(
                 referenceRequest.Params.TextDocument.Uri,
