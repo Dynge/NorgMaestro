@@ -31,7 +31,7 @@ public record CompletionRequestParams
     [JsonPropertyName("position")]
     public required Position Postion { get; init; }
 
-    [JsonPropertyName("completionContext")]
+    [JsonPropertyName("context")]
     public CompletionContext? CompletionContext { get; init; }
 }
 
@@ -41,7 +41,7 @@ public record CompletionContext
     public required CompletionTriggerKind TriggerKind { get; init; }
 
     [JsonPropertyName("triggerCharacter")]
-    public char TriggerCharacter { get; init; }
+    public char? TriggerCharacter { get; init; }
 }
 
 public enum CompletionTriggerKind

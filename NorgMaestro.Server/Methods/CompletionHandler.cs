@@ -14,7 +14,7 @@ public class CompletionHandler : IMessageHandler
 
         Writer.EncodeAndWrite(Notification.Default($"Created {completionRequest.Params.CompletionContext}!", MessageType.Debug));
         IEnumerable<CompletionItem> res = [];
-        if (completionRequest.Params.CompletionContext?.TriggerCharacter == 'a')
+        if (completionRequest.Params.CompletionContext?.TriggerCharacter is '{')
         {
             res = GetLinkCompletions(completionRequest.Params.TextDocument.Uri);
         }
@@ -37,14 +37,14 @@ public class CompletionHandler : IMessageHandler
         return Response.OfSuccess(completionRequest.Id, res);
     }
 
-    public IEnumerable<CompletionItem> GetLinkCompletions(Uri currentDocument)
+    public IEnumerable<CompletionItem> GetLinkCompletions(Uri currentDocument )
     {
         IEnumerable<CompletionItem> completionItems = State
             .Documents.Values.Where(d => !d.Uri.Equals(currentDocument))
             .Select(d => new CompletionItem()
             {
                 Label =
-                    $"{{:{Path.GetFileNameWithoutExtension(d.Uri.AbsolutePath)}:}}[{d.Metadata.Title}]",
+                    $"{{:{Path.GetFileNameWithoutExtension(d.Uri.AbsolutePath)}:}}[{d.Metadata.Title?.Name?? ""}]",
             });
         return completionItems;
     }

@@ -19,7 +19,7 @@ public class InitializeHandler : IMessageHandler
                     CompletionProvider = new()
                     {
                         ResolveProvider = false,
-                        TriggerCharacters = ['æ', 'ø', 'å']
+                        TriggerCharacters = ['æ', 'ø', 'å', '{']
                     },
                     WorkspaceSymbolProvider = true,
                     ReferencesProvider = true,
