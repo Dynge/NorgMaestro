@@ -12,11 +12,16 @@ public class CompletionHandler : IMessageHandler
     {
         CompletionRequest completionRequest = CompletionRequest.From(Request);
 
-        Writer.EncodeAndWrite(Notification.Default($"Created {completionRequest.Params.CompletionContext}!", MessageType.Debug));
+        Writer.EncodeAndWrite(
+            Notification.Default(
+                $"Created {completionRequest.Params.CompletionContext}!",
+                MessageType.Debug
+            )
+        );
         IEnumerable<CompletionItem> res = [];
         if (completionRequest.Params.CompletionContext?.TriggerCharacter is '{')
         {
-            res = GetLinkCompletions(completionRequest.Params.TextDocument.Uri);
+            res = GetLinkCompletions(completionRequest.Params);
         }
         else
         {
@@ -37,14 +42,37 @@ public class CompletionHandler : IMessageHandler
         return Response.OfSuccess(completionRequest.Id, res);
     }
 
-    public IEnumerable<CompletionItem> GetLinkCompletions(Uri currentDocument )
+    public IEnumerable<CompletionItem> GetLinkCompletions(
+        CompletionRequestParams completionRequestParams
+    )
     {
         IEnumerable<CompletionItem> completionItems = State
-            .Documents.Values.Where(d => !d.Uri.Equals(currentDocument))
+            .Documents.Values.Where(d => !d.Uri.Equals(completionRequestParams.TextDocument.Uri))
             .Select(d => new CompletionItem()
             {
-                Label =
-                    $"{{:{Path.GetFileNameWithoutExtension(d.Uri.AbsolutePath)}:}}[{d.Metadata.Title?.Name?? ""}]",
+                Label = d.Metadata.Title?.Name ?? "[No Title]",
+                Kind = CompletionKind.File,
+                TextEdit = new()
+                {
+                    Range = new()
+                    {
+                        Start = new()
+                        {
+                            Character = completionRequestParams.Postion.Character - 1,
+                            Line = completionRequestParams.Postion.Line,
+                        },
+                        End = new()
+                        {
+                            Line = completionRequestParams.Postion.Line,
+                            Character = (uint)(
+                                completionRequestParams.Postion.Character
+                                + $"{{:{Path.GetFileNameWithoutExtension(d.Uri.AbsolutePath)}:}}[{d.Metadata.Title?.Name ?? ""}]".Length
+                            ),
+                        },
+                    },
+                    NewText =
+                        $"{{:{Path.GetFileNameWithoutExtension(d.Uri.AbsolutePath)}:}}[{d.Metadata.Title?.Name ?? ""}]",
+                },
             });
         return completionItems;
     }
