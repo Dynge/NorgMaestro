@@ -7,7 +7,6 @@ public class LanguageServerState
 {
     public Dictionary<Uri, Document> Documents { get; init; } = [];
     public Dictionary<Uri, HashSet<ReferenceLocation>> References { get; init; } = [];
-    private readonly object _updateDocLock = new();
 
     public void Initialize(Uri rootUri)
     {
@@ -36,21 +35,18 @@ public class LanguageServerState
             {
                 Uri = fileUri,
                 Metadata = metadata,
-                Content = content
+                Content = content,
             };
 
-        lock (_updateDocLock)
+        Documents[fileUri] = doc;
+        foreach (KeyValuePair<Uri, HashSet<ReferenceLocation>> refKvp in references)
         {
-            Documents[fileUri] = doc;
-            foreach (KeyValuePair<Uri, HashSet<ReferenceLocation>> refKvp in references)
-            {
-                References[refKvp.Key] = References.TryGetValue(
-                    refKvp.Key,
-                    out HashSet<ReferenceLocation>? value
-                )
-                    ? ([.. value, .. refKvp.Value])
-                    : ([.. refKvp.Value]);
-            }
+            References[refKvp.Key] = References.TryGetValue(
+                refKvp.Key,
+                out HashSet<ReferenceLocation>? value
+            )
+                ? ([.. value, .. refKvp.Value])
+                : ([.. refKvp.Value]);
         }
 
         return doc;

@@ -3,17 +3,27 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server;
 
-public class NeorgLspServer
+internal sealed class NeorgLspServer
 {
-    public static void Main()
+    private readonly IRpcReader _reader;
+    private readonly IRpcWriter _writer;
+    private readonly HandlerFactory _handlerFactory;
+    private readonly LanguageServerState _state = new();
+
+    public NeorgLspServer()
     {
         RpcMessageReaderWriter readerWriter =
             new(Console.OpenStandardInput(), Console.OpenStandardOutput());
-        LanguageServerState state = new();
-        HandlerFactory handlerFactory = new() { Writer = readerWriter, State = state };
+        _reader = readerWriter;
+        _writer = readerWriter;
+        _handlerFactory = new() { Writer = readerWriter, State = _state };
+    }
+
+    public void Startup()
+    {
         while (true)
         {
-            RpcMessage? req = readerWriter.Decode();
+            RpcMessage? req = _reader.Decode();
             if (req is null)
             {
                 continue;
@@ -21,10 +31,10 @@ public class NeorgLspServer
 
             try
             {
-                Response? res = handlerFactory.CreateHandler(req)?.HandleRequest();
+                Response? res = _handlerFactory.CreateHandler(req)?.HandleRequest();
                 if (res is not null)
                 {
-                    readerWriter.EncodeAndWrite(res);
+                    _writer.EncodeAndWrite(res);
                 }
             }
             catch (InvalidDataException)

@@ -21,7 +21,17 @@ public record MetaField
     public required TextRange Range { get; init; }
 }
 
-public partial class NorgParser
+internal interface INorgParser
+{
+    public static abstract NeorgMetadata GetMetadata(Uri fileUri);
+    public static abstract Dictionary<Uri, HashSet<ReferenceLocation>> GetReferences(
+        Uri fileUri,
+        string[] content
+    );
+    public static abstract NorgLink? ParseLink(Uri fileUri, Position position, string line);
+}
+
+internal partial class NorgParser : INorgParser
 {
     public static NeorgMetadata GetMetadata(Uri fileUri)
     {
@@ -47,7 +57,7 @@ public partial class NorgParser
                 {
                     "@document.meta" => true,
                     "@end" => false,
-                    _ => insideMetadata
+                    _ => insideMetadata,
                 };
                 if (insideMetadata is false)
                 {
@@ -67,9 +77,9 @@ public partial class NorgParser
                                 Range = new()
                                 {
                                     Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length }
-                                }
-                            }
+                                    End = new() { Line = lineNr, Character = (uint)line.Length },
+                                },
+                            },
                         };
                         break;
                     case string when NorgMetaDescription().Matches(line).Count > 0:
@@ -83,9 +93,9 @@ public partial class NorgParser
                                 Range = new()
                                 {
                                     Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length }
-                                }
-                            }
+                                    End = new() { Line = lineNr, Character = (uint)line.Length },
+                                },
+                            },
                         };
                         break;
                     case string when NorgMetaAuthors().Matches(line).Count > 0:
@@ -99,9 +109,9 @@ public partial class NorgParser
                                 Range = new()
                                 {
                                     Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length }
-                                }
-                            }
+                                    End = new() { Line = lineNr, Character = (uint)line.Length },
+                                },
+                            },
                         };
                         break;
 
@@ -126,7 +136,7 @@ public partial class NorgParser
                                 {
                                     Start = new() { Line = lineNr, Character = categoryStart },
                                     End = new() { Line = lineNr, Character = categoryEnd },
-                                }
+                                },
                             }
                         );
                         line = streamReader.ReadLine();
@@ -147,10 +157,10 @@ public partial class NorgParser
                                             Start = new()
                                             {
                                                 Line = lineNr,
-                                                Character = categoryStart
+                                                Character = categoryStart,
                                             },
                                             End = new() { Line = lineNr, Character = categoryEnd },
-                                        }
+                                        },
                                     }
                                 );
                             }
@@ -171,9 +181,9 @@ public partial class NorgParser
                                 Range = new()
                                 {
                                     Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length }
-                                }
-                            }
+                                    End = new() { Line = lineNr, Character = (uint)line.Length },
+                                },
+                            },
                         };
                         break;
                     case string when NorgMetaUpdated().Matches(line).Count > 0:
@@ -187,9 +197,9 @@ public partial class NorgParser
                                 Range = new()
                                 {
                                     Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length }
-                                }
-                            }
+                                    End = new() { Line = lineNr, Character = (uint)line.Length },
+                                },
+                            },
                         };
                         break;
                     case string when NorgMetaVersion().Matches(line).Count > 0:
@@ -203,9 +213,9 @@ public partial class NorgParser
                                 Range = new()
                                 {
                                     Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length }
-                                }
-                            }
+                                    End = new() { Line = lineNr, Character = (uint)line.Length },
+                                },
+                            },
                         };
                         break;
 
@@ -266,7 +276,7 @@ public partial class NorgParser
         return references;
     }
 
-    public static NorgLink[] ParseLinks(Uri fileUri, uint lineNr, string line)
+    private static NorgLink[] ParseLinks(Uri fileUri, uint lineNr, string line)
     {
         MatchCollection matches = NorgFileLinkRegex().Matches(line);
         return matches.Select(m => NorgLink.From(fileUri, lineNr, m)).ToArray();
@@ -283,7 +293,7 @@ public partial class NorgParser
     }
 
     [GeneratedRegex(@"{:(\$/)?(?<File>(\w|[-./~])+):}\[(?<LinkText>.+)\]")]
-    public static partial Regex NorgFileLinkRegex();
+    private static partial Regex NorgFileLinkRegex();
 
     [GeneratedRegex(@"^title: ")]
     private static partial Regex NorgMetaTitle();
@@ -307,7 +317,7 @@ public partial class NorgParser
     private static partial Regex NorgMetaVersion();
 }
 
-public record NorgLink
+internal record NorgLink
 {
     public required Uri NorgFile { get; init; }
     public required string File { get; init; }
@@ -321,12 +331,11 @@ public record NorgLink
         return File.StartsWith('/') switch
         {
             true => new("file://" + File + ".norg"),
-            false
-                => new(
-                    "file://"
-                        + Path.Join(Directory.GetParent(NorgFile.AbsolutePath)!.FullName, File)
-                        + ".norg"
-                )
+            false => new(
+                "file://"
+                    + Path.Join(Directory.GetParent(NorgFile.AbsolutePath)!.FullName, File)
+                    + ".norg"
+            ),
         };
     }
 
@@ -344,7 +353,7 @@ public record NorgLink
                 End = new()
                 {
                     Line = lineNr,
-                    Character = (uint)(fileGroup.Index + fileGroup.Length)
+                    Character = (uint)(fileGroup.Index + fileGroup.Length),
                 },
             },
 
@@ -355,14 +364,14 @@ public record NorgLink
                 End = new()
                 {
                     Line = lineNr,
-                    Character = (uint)(linkTextGroup.Index + linkTextGroup.Length)
+                    Character = (uint)(linkTextGroup.Index + linkTextGroup.Length),
                 },
             },
             AbsoluteRange = new()
             {
                 Start = new() { Line = lineNr, Character = (uint)match.Index },
                 End = new() { Line = lineNr, Character = (uint)(match.Index + match.Length) },
-            }
+            },
         };
     }
 }
