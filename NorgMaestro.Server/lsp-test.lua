@@ -6,10 +6,8 @@ end
 local csharp_client = {
 	name = "NorgMaestro",
 	filetypes = { "norg" },
-	cmd = {
-        vim.env.HOME .. "/git/NorgMaestro/bin/Debug/net8.0/NorgMaestro",
-	},
-    root_dir = vim.env.HOME .. "/notes/",
+	cmd = { "NorgMaestro.Server" },
+	root_dir = vim.env.HOME .. "/notes/",
 	trace = "verbose",
 }
 
@@ -18,5 +16,6 @@ vim.print(client_id)
 
 if client_id ~= nil then
 	local neorg_buffer = 1
-	vim.lsp.buf_attach_client(neorg_buffer, client_id)
+	local didattach =vim.lsp.buf_attach_client(neorg_buffer, client_id)
+    vim.print(didattach)
 end

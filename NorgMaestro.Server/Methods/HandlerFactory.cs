@@ -2,7 +2,7 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class HandlerFactory(IRpcWriter writer, LanguageServerState state)
+public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
 {
     private readonly IRpcWriter _writer = writer;
     private readonly LanguageServerState _state = state;
@@ -27,6 +27,18 @@ public class HandlerFactory(IRpcWriter writer, LanguageServerState state)
         };
 
         return handler;
+    }
+
+    public bool TryHandleRequest(RpcMessage req)
+    {
+        var handler = CreateHandler(req);
+        var didHandle = handler is not CantHandler;
+        var res = handler.HandleRequest();
+        if (res is not null)
+        {
+            _writer.EncodeAndWrite(res);
+        }
+        return didHandle;
     }
 
     public struct MethodType
