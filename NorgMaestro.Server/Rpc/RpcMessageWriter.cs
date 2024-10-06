@@ -15,13 +15,13 @@ public interface IRpcReader
 
 public class RpcMessageReader(Stream read) : IRpcReader
 {
-    private StreamReader Reader { get; init; } = new(read, Encoding.UTF8);
+    private readonly StreamReader _reader = new(read, Encoding.UTF8);
 
     private const string ContentLengthHeader = "Content-Length: ";
 
     public RpcMessage? Decode()
     {
-        string? header = Reader.ReadLine();
+        string? header = _reader.ReadLine();
         bool headerExists = header?.StartsWith(ContentLengthHeader) ?? false;
         if (headerExists is false)
         {
@@ -36,7 +36,7 @@ public class RpcMessageReader(Stream read) : IRpcReader
             return null;
         }
 
-        string? newline = Reader.ReadLine();
+        string? newline = _reader.ReadLine();
         bool newLinesExists = newline?.SequenceEqual("") ?? false;
         if (newLinesExists is false)
         {
@@ -44,7 +44,7 @@ public class RpcMessageReader(Stream read) : IRpcReader
         }
 
         char[] buffer = new char[contentLength];
-        _ = Reader.Read(buffer, 0, contentLength);
+        _ = _reader.Read(buffer, 0, contentLength);
         string content = string.Concat(buffer);
 
         RpcMessage? pson = JsonSerializer.Deserialize<RpcMessage>(content);
