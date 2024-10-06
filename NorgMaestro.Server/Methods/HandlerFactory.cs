@@ -16,7 +16,7 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
             MethodType.DidSave => new DidSaveHandler(_state, req),
             MethodType.Initialize => new InitializeHandler(_state, req),
             MethodType.Initialized => new InitializedHandler(_writer),
-            MethodType.Completion => new CompletionHandler(_state, _writer, req),
+            MethodType.Completion => new CompletionHandler(_state, req),
             MethodType.Hover => new HoverHandler(req),
             MethodType.Rename => new RenameHandler(_state, req),
             MethodType.PrepareCallHierarchy => new PrepareCallHierarchyHandler(_state, req),

@@ -2,48 +2,45 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class CompletionHandler(LanguageServerState state, IRpcWriter writer, RpcMessage request)
+public class CompletionHandler(LanguageServerState state, RpcMessage request)
     : IMessageHandler
 {
     private readonly RpcMessage _request = request;
-    private readonly IRpcWriter _writer = writer;
     private readonly LanguageServerState _state = state;
 
     public Response? HandleRequest()
     {
         CompletionRequest completionRequest = CompletionRequest.From(_request);
 
-        _writer.EncodeAndWrite(
-            Notification.Default(
-                $"Created {completionRequest.Params.CompletionContext}!",
-                MessageType.Debug
-            )
-        );
-        IEnumerable<CompletionItem> res = [];
-        if (completionRequest.Params.CompletionContext?.TriggerCharacter is '{')
+        var items = completionRequest.Params.CompletionContext?.TriggerCharacter switch
         {
-            res = GetLinkCompletions(completionRequest.Params);
-        }
-        else
-        {
-            HashSet<CompletionItem> uniqueCategories = [];
-            foreach (Document doc in _state.Documents.Values)
-            {
-                if (doc.Uri.Equals(completionRequest.Params.TextDocument.Uri))
-                {
-                    continue;
-                }
-                IEnumerable<CompletionItem> completionItems = doc.Metadata.Categories.Select(
-                    c => new CompletionItem() { Label = c.Name }
-                );
-                uniqueCategories.UnionWith(completionItems);
-            }
-            res = uniqueCategories.ToList();
-        }
-        return Response.OfSuccess(completionRequest.Id, res);
+            '{' => GetLinkCompletions(completionRequest.Params),
+            _ => GetCategoryCompletions(completionRequest.Params),
+        };
+
+        return Response.OfSuccess(completionRequest.Id, items);
     }
 
-    public IEnumerable<CompletionItem> GetLinkCompletions(
+    private HashSet<CompletionItem> GetCategoryCompletions(
+        CompletionRequestParams completionRequestParams
+    )
+    {
+        HashSet<CompletionItem> uniqueCategories = [];
+        foreach (Document doc in _state.Documents.Values)
+        {
+            if (doc.Uri.Equals(completionRequestParams.TextDocument.Uri))
+            {
+                continue;
+            }
+            IEnumerable<CompletionItem> completionItems = doc.Metadata.Categories.Select(
+                c => new CompletionItem() { Label = c.Name }
+            );
+            uniqueCategories.UnionWith(completionItems);
+        }
+        return uniqueCategories;
+    }
+
+    private IEnumerable<CompletionItem> GetLinkCompletions(
         CompletionRequestParams completionRequestParams
     )
     {

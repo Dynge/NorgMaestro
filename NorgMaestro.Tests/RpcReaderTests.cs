@@ -1,6 +1,7 @@
 using System.Text;
 using FluentAssertions;
 using NorgMaestro.Server.Rpc;
+using static NorgMaestro.Server.Methods.HandlerFactory;
 
 namespace NorgMaestro.Tests;
 
@@ -27,10 +28,14 @@ public sealed class RpcReaderTests
     [Fact]
     public void ShouldReadJsonRpcMessage()
     {
-        var data = File.ReadAllText("/home/michael/git/neorg-lsp/NorgMaestro.Server/rpc-message");
+        var data = File.ReadAllText("./Resources/RpcMessages/initialize");
         SendToStream(data);
 
         var decodedMessage = _reader.Decode();
-        decodedMessage.Should().NotBeNull();
+        if (decodedMessage is null)
+        {
+            Assert.Fail("decodedMessage is null");
+        }
+        decodedMessage.Method.Should().Be(MethodType.Initialize);
     }
 }

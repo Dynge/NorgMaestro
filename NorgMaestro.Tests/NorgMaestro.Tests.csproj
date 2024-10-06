@@ -8,7 +8,7 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0"></PackageReference>
-    <PackageReference Include="FluentAssertions" Version="6.12.1" />
+    <PackageReference Include="FluentAssertions" Version="6.12.1"></PackageReference>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0"></PackageReference>
     <PackageReference Include="NSubstitute" Version="5.1.0"></PackageReference>
     <PackageReference Include="NSubstitute.Analyzers.CSharp" Version="1.0.17">
@@ -17,6 +17,10 @@
     </PackageReference>
     <PackageReference Include="xunit" Version="2.5.3"></PackageReference>
     <PackageReference Include="xunit.runner.visualstudio" Version="2.5.3"></PackageReference>
+    <!-- Include test files -->
+    <Content Include="Resources/**">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
   </ItemGroup>
   <ItemGroup>
     <Using Include="Xunit"></Using>

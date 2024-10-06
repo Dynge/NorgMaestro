@@ -32,13 +32,13 @@ public static class FileUtil
                 int startIndex = (lineNr == range.Start.Line) switch
                 {
                     true => (int)range.Start.Character,
-                    false => 0
+                    false => 0,
                 };
 
                 int endIndex = (lineNr == range.End.Line) switch
                 {
                     true => (int)range.End.Character,
-                    false => line.Length
+                    false => line.Length,
                 };
 
                 if (startIndex == endIndex)
