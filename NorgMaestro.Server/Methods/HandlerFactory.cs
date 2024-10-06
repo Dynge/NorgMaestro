@@ -2,8 +2,33 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class HandlerFactory
+public class HandlerFactory(IRpcWriter writer, LanguageServerState state)
 {
+    private readonly IRpcWriter _writer = writer;
+    private readonly LanguageServerState _state = state;
+
+    public IMessageHandler CreateHandler(RpcMessage req)
+    {
+        IMessageHandler handler = req.Method switch
+        {
+            MethodType.Shutdown => new ShutdownHandler(_writer, req),
+            MethodType.Exit => new ExitHandler(_writer),
+            MethodType.DidSave => new DidSaveHandler(_state, req),
+            MethodType.Initialize => new InitializeHandler(_state, req),
+            MethodType.Initialized => new InitializedHandler(_writer),
+            MethodType.Completion => new CompletionHandler(_state, _writer, req),
+            MethodType.Hover => new HoverHandler(_state, req),
+            MethodType.Rename => new RenameHandler(_state, req),
+            MethodType.PrepareCallHierarchy => new PrepareCallHierarchyHandler(_state, req),
+            MethodType.IncomingCalls => new IncomingCallsHandler(_state, req),
+            MethodType.References => new ReferencesHandler(_state, req),
+            MethodType.WorkspaceSymbols => new WorkspaceSymbolHandler(_state, req),
+            _ => new CantHandler(_writer, req),
+        };
+
+        return handler;
+    }
+
     public struct MethodType
     {
         public const string Initialize = "initialize";
@@ -18,43 +43,5 @@ public class HandlerFactory
         public const string Hover = "textDocument/hover";
         public const string Shutdown = "shutdown";
         public const string Exit = "exit";
-    }
-
-    public required IRpcWriter Writer { get; init; }
-    public required LanguageServerState State { get; init; }
-
-    public IMessageHandler CreateHandler(RpcMessage req)
-    {
-        IMessageHandler handler = req.Method switch
-        {
-            MethodType.Shutdown => new ShutdownHandler() { Request = req, Writer = Writer },
-            MethodType.Exit => new ExitHandler() { Writer = Writer },
-            MethodType.DidSave => new DidSaveHandler() { Request = req, State = State },
-            MethodType.Initialize => new InitializeHandler() { Request = req, State = State },
-            MethodType.Initialized => new InitializedHandler() { Writer = Writer },
-            MethodType.Completion => new CompletionHandler()
-            {
-                Writer = Writer,
-                Request = req,
-                State = State,
-            },
-            MethodType.Hover => new HoverHandler() { Request = req, State = State },
-            MethodType.Rename => new RenameHandler() { Request = req, State = State },
-            MethodType.PrepareCallHierarchy => new PrepareCallHierarchyHandler()
-            {
-                Request = req,
-                State = State,
-            },
-            MethodType.IncomingCalls => new IncomingCallsHandler() { Request = req, State = State },
-            MethodType.References => new ReferencesHandler() { Request = req, State = State },
-            MethodType.WorkspaceSymbols => new WorkspaceSymbolHandler()
-            {
-                Request = req,
-                State = State,
-            },
-            _ => new CantHandler() { Request = req, Writer = Writer },
-        };
-
-        return handler;
     }
 }

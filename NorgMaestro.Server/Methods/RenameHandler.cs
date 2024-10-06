@@ -3,14 +3,14 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class RenameHandler : IMessageHandler
+public class RenameHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
-    public required RpcMessage Request { get; init; }
-    public required LanguageServerState State { get; init; }
+    private readonly RpcMessage _request =request;
+    private readonly LanguageServerState _state = state;
 
     public Response? HandleRequest()
     {
-        RenameRequest renameRequest = RenameRequest.From(Request);
+        RenameRequest renameRequest = RenameRequest.From(_request);
 
         string line = File.ReadLines(renameRequest.Params.TextDocument.Uri.AbsolutePath)
             .Skip((int)renameRequest.Params.Position.Line)
@@ -28,7 +28,7 @@ public class RenameHandler : IMessageHandler
             return Response.OfSuccess(renameRequest.Id);
         }
 
-        Document cursorDocument = State.Documents[link.GetFileLinkUri()];
+        Document cursorDocument = _state.Documents[link.GetFileLinkUri()];
         TextEdit[] changeInCursor = cursorDocument.Metadata.Title switch
         {
             MetaField titleField
@@ -36,7 +36,7 @@ public class RenameHandler : IMessageHandler
             _ => [],
         };
 
-        Dictionary<string, TextEdit[]> changeInRefs = State
+        Dictionary<string, TextEdit[]> changeInRefs = _state
             .References[link.GetFileLinkUri()]
             .ToLookup(reference => reference.Location.Uri)
             .ToDictionary(

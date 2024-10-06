@@ -1,3 +1,4 @@
+using System.Collections.ObjectModel;
 using NorgMaestro.Server.Parser;
 using NorgMaestro.Server.Rpc;
 
@@ -5,8 +6,12 @@ namespace NorgMaestro.Server;
 
 public class LanguageServerState
 {
-    public Dictionary<Uri, Document> Documents { get; init; } = [];
-    public Dictionary<Uri, HashSet<ReferenceLocation>> References { get; init; } = [];
+    private readonly Dictionary<Uri, Document> _documents = [];
+    private readonly Dictionary<Uri, HashSet<ReferenceLocation>> _references = [];
+
+    public ReadOnlyDictionary<Uri, Document> Documents => _documents.AsReadOnly();
+    public ReadOnlyDictionary<Uri, HashSet<ReferenceLocation>> References =>
+        _references.AsReadOnly();
 
     public void Initialize(Uri rootUri)
     {
@@ -38,10 +43,10 @@ public class LanguageServerState
                 Content = content,
             };
 
-        Documents[fileUri] = doc;
+        _documents[fileUri] = doc;
         foreach (KeyValuePair<Uri, HashSet<ReferenceLocation>> refKvp in references)
         {
-            References[refKvp.Key] = References.TryGetValue(
+            _references[refKvp.Key] = _references.TryGetValue(
                 refKvp.Key,
                 out HashSet<ReferenceLocation>? value
             )

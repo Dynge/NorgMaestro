@@ -13,24 +13,11 @@ public interface IRpcReader
     public RpcMessage? Decode();
 }
 
-public class RpcMessageReaderWriter : IRpcReader, IRpcWriter
+public class RpcMessageReader(Stream read) : IRpcReader
 {
-    private StreamReader Reader { get; init; }
-    private StreamWriter Writer { get; init; }
-
-    public RpcMessageReaderWriter(Stream read, Stream write)
-    {
-        Reader = new(read, Encoding.UTF8);
-        Writer = new(write, Encoding.UTF8) { AutoFlush = true };
-    }
+    private StreamReader Reader { get; init; } = new(read, Encoding.UTF8);
 
     private const string ContentLengthHeader = "Content-Length: ";
-
-    public void EncodeAndWrite(object o)
-    {
-        string body = Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(o));
-        Writer.Write(string.Concat(ContentLengthHeader, body.Length, "\r\n\r\n", body));
-    }
 
     public RpcMessage? Decode()
     {
@@ -80,5 +67,18 @@ public class RpcMessageReaderWriter : IRpcReader, IRpcWriter
 
         // Console.WriteLine(pson?.ToString());
         // Console.WriteLine(pson?.Params?.Deserialize<InitializeRequestParams>());
+    }
+}
+
+public class RpcMessageWriter(Stream write) : IRpcWriter
+{
+    private StreamWriter Writer { get; init; } = new(write, Encoding.UTF8);
+
+    private const string ContentLengthHeader = "Content-Length: ";
+
+    public void EncodeAndWrite(object o)
+    {
+        string body = Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(o));
+        Writer.Write(string.Concat(ContentLengthHeader, body.Length, "\r\n\r\n", body));
     }
 }

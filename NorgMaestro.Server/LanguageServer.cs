@@ -8,15 +8,24 @@ internal sealed class NeorgLspServer
     private readonly IRpcReader _reader;
     private readonly IRpcWriter _writer;
     private readonly HandlerFactory _handlerFactory;
-    private readonly LanguageServerState _state = new();
+    private readonly LanguageServerState _state;
+
+    public NeorgLspServer(IRpcWriter writer, IRpcReader reader, LanguageServerState? state = null)
+    {
+        _reader = reader;
+        _writer = writer;
+        _state = state ?? new();
+        _handlerFactory = new(writer, _state);
+    }
 
     public NeorgLspServer()
     {
-        RpcMessageReaderWriter readerWriter =
-            new(Console.OpenStandardInput(), Console.OpenStandardOutput());
-        _reader = readerWriter;
-        _writer = readerWriter;
-        _handlerFactory = new() { Writer = readerWriter, State = _state };
+        RpcMessageReader reader = new(Console.OpenStandardInput());
+        RpcMessageWriter writer = new(Console.OpenStandardOutput());
+        _reader = reader;
+        _writer = writer;
+        _state = new();
+        _handlerFactory = new(writer, _state);
     }
 
     public void Startup()

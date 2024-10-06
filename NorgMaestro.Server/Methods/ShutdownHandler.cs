@@ -2,10 +2,10 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class ShutdownHandler : IMessageHandler
+public class ShutdownHandler(IRpcWriter writer, RpcMessage request) : IMessageHandler
 {
-    public required RpcMessage Request { get; init; }
-    public required IRpcWriter Writer { get; init; }
+    private readonly RpcMessage Request = request;
+    private readonly IRpcWriter Writer = writer;
 
     public Response? HandleRequest()
     {
@@ -14,9 +14,9 @@ public class ShutdownHandler : IMessageHandler
     }
 }
 
-public class ExitHandler : IMessageHandler
+public class ExitHandler(IRpcWriter writer) : IMessageHandler
 {
-    public required IRpcWriter Writer { get; init; }
+    private readonly IRpcWriter Writer = writer;
 
     public Response? HandleRequest()
     {

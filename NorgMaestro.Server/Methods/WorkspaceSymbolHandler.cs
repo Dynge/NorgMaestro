@@ -3,10 +3,11 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public partial class WorkspaceSymbolHandler : IMessageHandler
+public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessage request)
+    : IMessageHandler
 {
-    public required RpcMessage Request { get; init; }
-    public required LanguageServerState State { get; init; }
+    private readonly RpcMessage Request = request;
+    private readonly LanguageServerState State = state;
 
     [GeneratedRegex(@"^\[(\w+)\]")]
     private static partial Regex KindRegex();

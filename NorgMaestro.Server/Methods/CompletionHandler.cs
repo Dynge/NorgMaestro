@@ -2,11 +2,12 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class CompletionHandler : IMessageHandler
+public class CompletionHandler(LanguageServerState state, IRpcWriter writer, RpcMessage request)
+    : IMessageHandler
 {
-    public required RpcMessage Request { get; init; }
-    public required IRpcWriter Writer { get; init; }
-    public required LanguageServerState State { get; init; }
+    private readonly RpcMessage Request = request;
+    private readonly IRpcWriter Writer = writer;
+    private readonly LanguageServerState State = state;
 
     public Response? HandleRequest()
     {

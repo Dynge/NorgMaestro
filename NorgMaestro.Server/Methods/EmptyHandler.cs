@@ -2,13 +2,13 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class EmptyHandler : IMessageHandler
+public class EmptyHandler(RpcMessage request) : IMessageHandler
 {
-    public required RpcMessage Request { get; init; }
+    private readonly RpcMessage _request =request;
 
     public Response? HandleRequest()
     {
-        return Request.Id switch
+        return _request.Id switch
         {
             int id => Response.OfSuccess(id),
             _ => null,
