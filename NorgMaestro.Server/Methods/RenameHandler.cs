@@ -5,7 +5,7 @@ namespace NorgMaestro.Server.Methods;
 
 public class RenameHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage _request =request;
+    private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
     public Response? HandleRequest()
@@ -29,7 +29,7 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
         }
 
         Document cursorDocument = _state.Documents[link.GetFileLinkUri()];
-        TextEdit[] changeInCursor = cursorDocument.Metadata.Title switch
+        List<TextEdit> changeInCursor = cursorDocument.Metadata.Title switch
         {
             MetaField titleField
                 => [new() { NewText = renameRequest.Params.NewName, Range = titleField.Range, }],

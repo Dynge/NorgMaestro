@@ -4,7 +4,7 @@ namespace NorgMaestro.Server.Parser;
 
 public static class FileUtil
 {
-    public static string[] ReadRange(Uri fileUri, TextRange range)
+    public static IEnumerable<string> ReadRange(Uri fileUri, TextRange range)
     {
         List<string> readLines = [];
 

@@ -29,14 +29,14 @@ public class LanguageServerState
 
     public Document? UpdateDocument(Uri fileUri)
     {
-        NeorgMetadata metadata = NorgParser.GetMetadata(fileUri);
-        string[] content = File.ReadAllLines(fileUri.LocalPath);
-        Dictionary<Uri, HashSet<ReferenceLocation>> references = NorgParser.GetReferences(
+        var metadata = NorgParser.GetMetadata(fileUri);
+        var content = File.ReadAllLines(fileUri.LocalPath);
+        var references = NorgParser.GetReferences(
             fileUri,
             content
         );
-        Document doc =
-            new()
+        var doc =
+            new Document()
             {
                 Uri = fileUri,
                 Metadata = metadata,
