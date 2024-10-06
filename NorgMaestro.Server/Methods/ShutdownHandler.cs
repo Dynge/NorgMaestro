@@ -4,23 +4,23 @@ namespace NorgMaestro.Server.Methods;
 
 public class ShutdownHandler(IRpcWriter writer, RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage Request = request;
-    private readonly IRpcWriter Writer = writer;
+    private readonly RpcMessage _request = request;
+    private readonly IRpcWriter _writer = writer;
 
     public Response? HandleRequest()
     {
-        Writer.EncodeAndWrite(Notification.Default("Shutting down..."));
-        return Response.OfSuccess(Request.Id ?? 0);
+        _writer.EncodeAndWrite(Notification.Default("Shutting down..."));
+        return Response.OfSuccess(_request.Id ?? 0);
     }
 }
 
 public class ExitHandler(IRpcWriter writer) : IMessageHandler
 {
-    private readonly IRpcWriter Writer = writer;
+    private readonly IRpcWriter _writer = writer;
 
     public Response? HandleRequest()
     {
-        Writer.EncodeAndWrite(Notification.Default("Goodbye!"));
+        _writer.EncodeAndWrite(Notification.Default("Goodbye!"));
         throw new InvalidDataException("Shutting down.");
     }
 }

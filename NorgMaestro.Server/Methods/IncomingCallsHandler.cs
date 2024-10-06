@@ -4,15 +4,15 @@ namespace NorgMaestro.Server.Methods;
 
 public class IncomingCallsHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage Request =request;
-    private readonly LanguageServerState State =state;
+    private readonly RpcMessage _request =request;
+    private readonly LanguageServerState _state =state;
 
     public Response? HandleRequest()
     {
-        IncomingCallsRequest completionRequest = IncomingCallsRequest.From(Request);
+        IncomingCallsRequest completionRequest = IncomingCallsRequest.From(_request);
 
         if (
-            State.References.TryGetValue(new Uri(completionRequest.Params.Item.Uri), out var refs)
+            _state.References.TryGetValue(new Uri(completionRequest.Params.Item.Uri), out var refs)
             is false
         )
         {
@@ -24,7 +24,7 @@ public class IncomingCallsHandler(LanguageServerState state, RpcMessage request)
 
         List<IncomingCallsResponseParams> response = refs.Select(reference =>
             {
-                State.Documents.TryGetValue(new(reference.Location.Uri), out var doc);
+                _state.Documents.TryGetValue(new(reference.Location.Uri), out var doc);
                 return new IncomingCallsResponseParams()
                 {
                     From = new()

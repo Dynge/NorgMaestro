@@ -5,11 +5,11 @@ namespace NorgMaestro.Server.Methods;
 
 public class HoverHandler(RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage Request = request;
+    private readonly RpcMessage _request = request;
 
     public Response? HandleRequest()
     {
-        HoverRequest hoverRequest = HoverRequest.From(Request);
+        HoverRequest hoverRequest = HoverRequest.From(_request);
 
         string? line = FileUtil
             .ReadRange(

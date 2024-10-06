@@ -5,15 +5,15 @@ namespace NorgMaestro.Server.Methods;
 public class CompletionHandler(LanguageServerState state, IRpcWriter writer, RpcMessage request)
     : IMessageHandler
 {
-    private readonly RpcMessage Request = request;
-    private readonly IRpcWriter Writer = writer;
-    private readonly LanguageServerState State = state;
+    private readonly RpcMessage _request = request;
+    private readonly IRpcWriter _writer = writer;
+    private readonly LanguageServerState _state = state;
 
     public Response? HandleRequest()
     {
-        CompletionRequest completionRequest = CompletionRequest.From(Request);
+        CompletionRequest completionRequest = CompletionRequest.From(_request);
 
-        Writer.EncodeAndWrite(
+        _writer.EncodeAndWrite(
             Notification.Default(
                 $"Created {completionRequest.Params.CompletionContext}!",
                 MessageType.Debug
@@ -27,7 +27,7 @@ public class CompletionHandler(LanguageServerState state, IRpcWriter writer, Rpc
         else
         {
             HashSet<CompletionItem> uniqueCategories = [];
-            foreach (Document doc in State.Documents.Values)
+            foreach (Document doc in _state.Documents.Values)
             {
                 if (doc.Uri.Equals(completionRequest.Params.TextDocument.Uri))
                 {
@@ -47,7 +47,7 @@ public class CompletionHandler(LanguageServerState state, IRpcWriter writer, Rpc
         CompletionRequestParams completionRequestParams
     )
     {
-        IEnumerable<CompletionItem> completionItems = State
+        IEnumerable<CompletionItem> completionItems = _state
             .Documents.Values.Where(d => !d.Uri.Equals(completionRequestParams.TextDocument.Uri))
             .Select(d => new CompletionItem()
             {

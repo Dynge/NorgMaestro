@@ -4,13 +4,13 @@ namespace NorgMaestro.Server.Methods;
 
 public class DidSaveHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage Request = request;
-    private readonly LanguageServerState State = state;
+    private readonly RpcMessage _request = request;
+    private readonly LanguageServerState _state = state;
 
     public Response? HandleRequest()
     {
-        DidSaveNotification didSaveNotification = DidSaveNotification.From(Request);
-        _ = State.UpdateDocument(didSaveNotification.Params.TextDocument.Uri);
+        DidSaveNotification didSaveNotification = DidSaveNotification.From(_request);
+        _ = _state.UpdateDocument(didSaveNotification.Params.TextDocument.Uri);
         return null;
     }
 }

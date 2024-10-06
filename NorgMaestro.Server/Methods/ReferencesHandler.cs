@@ -5,12 +5,12 @@ namespace NorgMaestro.Server.Methods;
 
 public class ReferencesHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage Request =request;
-    private readonly LanguageServerState State =state;
+    private readonly RpcMessage _request =request;
+    private readonly LanguageServerState _state =state;
 
     public Response? HandleRequest()
     {
-        ReferencesRequest referenceRequest = ReferencesRequest.From(Request);
+        ReferencesRequest referenceRequest = ReferencesRequest.From(_request);
 
         string line = FileUtil
             .ReadRange(
@@ -34,7 +34,7 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
             return Response.OfSuccess(referenceRequest.Id);
         }
 
-        HashSet<Location> references = State
+        HashSet<Location> references = _state
             .References.GetValueOrDefault(link.GetFileLinkUri(), [])
             .Select(reference => reference.Location)
             .ToHashSet();

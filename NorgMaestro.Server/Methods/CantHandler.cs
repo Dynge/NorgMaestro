@@ -4,13 +4,13 @@ namespace NorgMaestro.Server.Methods;
 
 public class CantHandler(IRpcWriter writer, RpcMessage request) : IMessageHandler
 {
-    private readonly IRpcWriter Writer = writer;
-    private readonly RpcMessage Request = request;
+    private readonly IRpcWriter _writer = writer;
+    private readonly RpcMessage _request = request;
 
     public Response? HandleRequest()
     {
-        Writer.EncodeAndWrite(
-            Notification.Default($"Cannot handle '{Request.Method}'!!.", MessageType.Warning)
+        _writer.EncodeAndWrite(
+            Notification.Default($"Cannot handle '{_request.Method}'!!.", MessageType.Warning)
         );
         return null;
     }

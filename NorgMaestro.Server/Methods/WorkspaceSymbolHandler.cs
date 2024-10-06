@@ -6,15 +6,15 @@ namespace NorgMaestro.Server.Methods;
 public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessage request)
     : IMessageHandler
 {
-    private readonly RpcMessage Request = request;
-    private readonly LanguageServerState State = state;
+    private readonly RpcMessage _request = request;
+    private readonly LanguageServerState _state = state;
 
     [GeneratedRegex(@"^\[(\w+)\]")]
     private static partial Regex KindRegex();
 
     public Response? HandleRequest()
     {
-        WorkspaceSymbolRequest workspaceRequest = WorkspaceSymbolRequest.From(Request);
+        WorkspaceSymbolRequest workspaceRequest = WorkspaceSymbolRequest.From(_request);
         List<WorkspaceSymbol> symbols = [];
         Func<WorkspaceSymbol, bool> filter = workspaceRequest.Params.Query switch
         {
@@ -34,7 +34,7 @@ public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessag
                     return wsSymbol.Name.Contains(q);
                 },
         };
-        foreach (Document doc in State.Documents.Values)
+        foreach (Document doc in _state.Documents.Values)
         {
             var workspaceName = doc.Metadata.Title?.Name ?? "";
             if (doc.Metadata.Description is not null)

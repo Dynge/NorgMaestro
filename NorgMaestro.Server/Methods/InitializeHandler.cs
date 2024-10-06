@@ -4,13 +4,13 @@ namespace NorgMaestro.Server.Methods;
 
 public class InitializeHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage Request = request;
-    private readonly LanguageServerState State = state;
+    private readonly RpcMessage _request = request;
+    private readonly LanguageServerState _state = state;
 
     public Response? HandleRequest()
     {
-        InitializeRequest initRequest = InitializeRequest.From(Request);
-        State.Initialize(initRequest.Params.RootUri);
+        InitializeRequest initRequest = InitializeRequest.From(_request);
+        _state.Initialize(initRequest.Params.RootUri);
         InitializeResultParams res =
             new()
             {
@@ -35,11 +35,11 @@ public class InitializeHandler(LanguageServerState state, RpcMessage request) : 
 
 public class InitializedHandler(IRpcWriter writer) : IMessageHandler
 {
-    private readonly IRpcWriter Writer = writer;
+    private readonly IRpcWriter _writer = writer;
 
     public Response? HandleRequest()
     {
-        Writer.EncodeAndWrite(Notification.Default("Initialized!", MessageType.Debug));
+        _writer.EncodeAndWrite(Notification.Default("Initialized!", MessageType.Debug));
         return null;
     }
 }

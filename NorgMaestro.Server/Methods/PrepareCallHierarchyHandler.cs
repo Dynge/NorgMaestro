@@ -4,13 +4,13 @@ namespace NorgMaestro.Server.Methods;
 
 public class PrepareCallHierarchyHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage Request =request;
-    private readonly LanguageServerState State =state;
+    private readonly RpcMessage _request =request;
+    private readonly LanguageServerState _state =state;
 
     public Response? HandleRequest()
     {
-        PrepareCallHierarchyRequest initRequest = PrepareCallHierarchyRequest.From(Request);
-        Document doc = State.Documents[initRequest.Params.TextDocument.Uri];
+        PrepareCallHierarchyRequest initRequest = PrepareCallHierarchyRequest.From(_request);
+        Document doc = _state.Documents[initRequest.Params.TextDocument.Uri];
         CallHierarchyItem[] items =
         [
             new CallHierarchyItem()
