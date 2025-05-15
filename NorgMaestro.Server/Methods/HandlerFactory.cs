@@ -29,14 +29,14 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
         return handler;
     }
 
-    public bool TryHandleRequest(RpcMessage req)
+    public async Task<bool> TryHandleRequest(RpcMessage req)
     {
         var handler = CreateHandler(req);
         var didHandle = handler is not CantHandler;
-        var res = handler.HandleRequest();
+        var res = await handler.HandleRequest();
         if (res is not null)
         {
-            _writer.EncodeAndWrite(res);
+            await _writer.EncodeAndWrite(res);
         }
         return didHandle;
     }

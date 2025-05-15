@@ -29,7 +29,7 @@ public record CompletionRequestParams
     public required TextDocument TextDocument { get; init; }
 
     [JsonPropertyName("position")]
-    public required Position Postion { get; init; }
+    public required Position Position { get; init; }
 
     [JsonPropertyName("context")]
     public CompletionContext? CompletionContext { get; init; }

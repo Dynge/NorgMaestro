@@ -20,10 +20,10 @@ public sealed class RpcWriterTests
     }
 
     [Fact]
-    public void ShouldEncodeAndWriteToStream()
+    public async Task ShouldEncodeAndWriteToStream()
     {
         List<CompletionItem> itemToEncode = [new() { Label = "Hello" }];
-        _writer.EncodeAndWrite(itemToEncode);
+        await _writer.EncodeAndWrite(itemToEncode);
 
         var itemToEncodeAsJson = JsonSerializer.Serialize(itemToEncode);
         ReadDataFromStream()

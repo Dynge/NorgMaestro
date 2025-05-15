@@ -8,11 +8,12 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         RenameRequest renameRequest = RenameRequest.From(_request);
 
-        string line = File.ReadLines(renameRequest.Params.TextDocument.Uri.AbsolutePath)
+        string line = File.ReadLinesAsync(renameRequest.Params.TextDocument.Uri.AbsolutePath)
+            .ToBlockingEnumerable()
             .Skip((int)renameRequest.Params.Position.Line)
             .FirstOrDefault("");
 
@@ -25,14 +26,16 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
 
         if (link is null)
         {
-            return Response.OfSuccess(renameRequest.Id);
+            return Task.FromResult<Response?>(Response.OfSuccess(renameRequest.Id));
         }
 
         Document cursorDocument = _state.Documents[link.GetFileLinkUri()];
         List<TextEdit> changeInCursor = cursorDocument.Metadata.Title switch
         {
-            MetaField titleField
-                => [new() { NewText = renameRequest.Params.NewName, Range = titleField.Range, }],
+            MetaField titleField =>
+            [
+                new() { NewText = renameRequest.Params.NewName, Range = titleField.Range },
+            ],
             _ => [],
         };
 
@@ -52,7 +55,7 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
                                     reference.Location.Range.Start,
                                     reference.Line
                                 )!
-                                .LinkTextRange
+                                .LinkTextRange,
                         })
                         .ToArray()
             );
@@ -68,6 +71,6 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
 
         WorkspaceEdit edit = new() { Changes = changeInRefs };
 
-        return Response.OfSuccess(renameRequest.Id, edit);
+        return Task.FromResult<Response?>(Response.OfSuccess(renameRequest.Id, edit));
     }
 }

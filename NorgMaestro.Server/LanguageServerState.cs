@@ -13,7 +13,7 @@ public class LanguageServerState
     public ReadOnlyDictionary<Uri, HashSet<ReferenceLocation>> References =>
         _references.AsReadOnly();
 
-    public void Initialize(Uri rootUri)
+    public async Task Initialize(Uri rootUri)
     {
         foreach (
             string note in Directory.GetFiles(
@@ -23,14 +23,14 @@ public class LanguageServerState
             )
         )
         {
-            _ = UpdateDocument(new Uri(Path.GetFullPath(note)));
+            _ = await UpdateDocument(new Uri(Path.GetFullPath(note)));
         }
     }
 
-    public Document? UpdateDocument(Uri fileUri)
+    public async Task<Document?> UpdateDocument(Uri fileUri)
     {
-        var metadata = NorgParser.GetMetadata(fileUri);
-        var content = File.ReadAllLines(fileUri.LocalPath);
+        var metadata = await NorgParser.GetMetadata(fileUri);
+        var content = await File.ReadAllLinesAsync(fileUri.LocalPath);
         var references = NorgParser.GetReferences(
             fileUri,
             content

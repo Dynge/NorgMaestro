@@ -12,27 +12,32 @@ internal sealed class NeorgLspServer(
     private readonly IRpcReader _reader = reader;
     private readonly HandlerFactory _handlerFactory = new(state, writer);
 
-    public void Startup()
+    public async Task Startup()
     {
         while (true)
         {
-            RpcMessage? req = _reader.Decode();
+            var req = await _reader.DecodeAsync();
             if (req is null)
             {
                 continue;
             }
+            // Just run the command!
+            _ = Task.Run(async () => await HandleRequest(req));
+        }
+    }
 
-            try
-            {
-                var didSucceed = _handlerFactory.TryHandleRequest(req);
-                if (!didSucceed) { }
-            }
-            catch (InvalidDataException)
-            {
-                // TODO: Create shutdown exception
-                // Shutdown
-                return;
-            }
+    private async Task HandleRequest(RpcMessage message)
+    {
+        try
+        {
+            var didSucceed = await _handlerFactory.TryHandleRequest(message);
+            if (!didSucceed) { }
+        }
+        catch (InvalidDataException)
+        {
+            // TODO: Create shutdown exception
+            // Shutdown
+            return;
         }
     }
 }

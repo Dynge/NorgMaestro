@@ -7,7 +7,7 @@ public class PrepareCallHierarchyHandler(LanguageServerState state, RpcMessage r
     private readonly RpcMessage _request =request;
     private readonly LanguageServerState _state =state;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         PrepareCallHierarchyRequest initRequest = PrepareCallHierarchyRequest.From(_request);
         Document doc = _state.Documents[initRequest.Params.TextDocument.Uri];
@@ -30,6 +30,6 @@ public class PrepareCallHierarchyHandler(LanguageServerState state, RpcMessage r
                 },
             }
         ];
-        return Response.OfSuccess(initRequest.Id, items);
+        return Task.FromResult<Response?>(Response.OfSuccess(initRequest.Id, items));
     }
 }

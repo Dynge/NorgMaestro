@@ -4,8 +4,8 @@ namespace NorgMaestro.Server.Methods;
 
 public class NoneHandler : IMessageHandler
 {
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
-        return null;
+        return Task.FromResult<Response?>(null);
     }
 }

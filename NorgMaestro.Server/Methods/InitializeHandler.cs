@@ -7,10 +7,10 @@ public class InitializeHandler(LanguageServerState state, RpcMessage request) : 
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
-    public Response? HandleRequest()
+    public async Task<Response?> HandleRequest()
     {
         InitializeRequest initRequest = InitializeRequest.From(_request);
-        _state.Initialize(initRequest.Params.RootUri);
+        await _state.Initialize(initRequest.Params.RootUri);
         InitializeResultParams res =
             new()
             {
@@ -37,9 +37,9 @@ public class InitializedHandler(IRpcWriter writer) : IMessageHandler
 {
     private readonly IRpcWriter _writer = writer;
 
-    public Response? HandleRequest()
+    public async Task<Response?> HandleRequest()
     {
-        _writer.EncodeAndWrite(Notification.Default("Initialized!", MessageType.Debug));
+        await _writer.EncodeAndWrite(Notification.Default("Initialized!", MessageType.Debug));
         return null;
     }
 }

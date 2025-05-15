@@ -7,9 +7,9 @@ public class CantHandler(IRpcWriter writer, RpcMessage request) : IMessageHandle
     private readonly IRpcWriter _writer = writer;
     private readonly RpcMessage _request = request;
 
-    public Response? HandleRequest()
+    public async Task<Response?> HandleRequest()
     {
-        _writer.EncodeAndWrite(
+        await _writer.EncodeAndWrite(
             Notification.Default($"Cannot handle '{_request.Method}'!!.", MessageType.Warning)
         );
         return null;

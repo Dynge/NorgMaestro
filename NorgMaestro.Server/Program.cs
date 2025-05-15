@@ -4,13 +4,13 @@ namespace NorgMaestro.Server;
 
 public sealed class Program
 {
-    public static void Main()
+    public static async Task Main()
     {
         var server = new NeorgLspServer(
             new RpcMessageWriter(Console.OpenStandardOutput()),
             new RpcMessageReader(Console.OpenStandardInput()),
             new()
         );
-        server.Startup();
+        await server.Startup();
     }
 }

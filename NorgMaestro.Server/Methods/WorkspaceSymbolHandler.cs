@@ -12,27 +12,25 @@ public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessag
     [GeneratedRegex(@"^\[(\w+)\]")]
     private static partial Regex KindRegex();
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         WorkspaceSymbolRequest workspaceRequest = WorkspaceSymbolRequest.From(_request);
         List<WorkspaceSymbol> symbols = [];
         Func<WorkspaceSymbol, bool> filter = workspaceRequest.Params.Query switch
         {
-            string q when KindRegex().IsMatch(q)
-                => (WorkspaceSymbol wsSymbol) =>
+            string q when KindRegex().IsMatch(q) => wsSymbol =>
+            {
+                var symbolMatch = KindRegex().Match(q).Groups[1].Value;
+                if (Enum.TryParse<SymbolKind>(symbolMatch, out var kind) is false)
                 {
-                    var symbolMatch = KindRegex().Match(q).Groups[1].Value;
-                    if (Enum.TryParse<SymbolKind>(symbolMatch, out var kind) is false)
-                    {
-                        return false;
-                    }
-                    return wsSymbol.Kind == kind;
-                },
-            string q
-                => (WorkspaceSymbol wsSymbol) =>
-                {
-                    return wsSymbol.Name.Contains(q);
-                },
+                    return false;
+                }
+                return wsSymbol.Kind == kind;
+            },
+            string q => wsSymbol =>
+            {
+                return wsSymbol.Name.Contains(q);
+            },
         };
         foreach (Document doc in _state.Documents.Values)
         {
@@ -48,12 +46,12 @@ public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessag
                     Range = new()
                     {
                         Start = new() { Line = 0, Character = 0 },
-                        End = new() { Line = 0, Character = 0 }
+                        End = new() { Line = 0, Character = 0 },
                     },
                     Uri = doc.Uri.AbsoluteUri,
                 },
                 Kind = SymbolKind.File,
-                Name = workspaceName
+                Name = workspaceName,
             };
 
             if (filter(symbol) is false)
@@ -62,6 +60,8 @@ public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessag
             }
             symbols.Add(symbol);
         }
-        return Response.OfSuccess(workspaceRequest.Id, symbols.ToArray());
+        return Task.FromResult<Response?>(
+            Response.OfSuccess(workspaceRequest.Id, symbols.ToArray())
+        );
     }
 }

@@ -5,10 +5,10 @@ namespace NorgMaestro.Server.Methods;
 
 public class ReferencesHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage _request =request;
-    private readonly LanguageServerState _state =state;
+    private readonly RpcMessage _request = request;
+    private readonly LanguageServerState _state = state;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         ReferencesRequest referenceRequest = ReferencesRequest.From(_request);
 
@@ -18,7 +18,7 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
                 new()
                 {
                     Start = referenceRequest.Params.Position,
-                    End = referenceRequest.Params.Position
+                    End = referenceRequest.Params.Position,
                 }
             )
             .FirstOrDefault("");
@@ -31,13 +31,15 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
 
         if (link is null)
         {
-            return Response.OfSuccess(referenceRequest.Id);
+            return Task.FromResult<Response?>(Response.OfSuccess(referenceRequest.Id));
         }
 
-        HashSet<Location> references = _state
-            .References.GetValueOrDefault(link.GetFileLinkUri(), [])
-            .Select(reference => reference.Location)
-            .ToHashSet();
+        HashSet<Location> references =
+        [
+            .. _state
+                .References.GetValueOrDefault(link.GetFileLinkUri(), [])
+                .Select(reference => reference.Location),
+        ];
         if (referenceRequest.Params.Context.IncludeDeclaration)
         {
             _ = references.Add(
@@ -46,17 +48,17 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
                     Uri = link.GetFileLinkUri().AbsoluteUri,
                     Range = new()
                     {
-                        Start = new() { Line = 0, Character = 0, },
-                        End = new() { Line = 0, Character = 0, },
-                    }
+                        Start = new() { Line = 0, Character = 0 },
+                        End = new() { Line = 0, Character = 0 },
+                    },
                 }
             );
         }
 
         return (references.Count > 0) switch
         {
-            true => Response.OfSuccess(referenceRequest.Id, references),
-            false => Response.OfSuccess(referenceRequest.Id),
+            true => Task.FromResult<Response?>(Response.OfSuccess(referenceRequest.Id, references)),
+            false => Task.FromResult<Response?>(Response.OfSuccess(referenceRequest.Id)),
         };
     }
 }

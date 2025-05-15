@@ -8,7 +8,7 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request)
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         CompletionRequest completionRequest = CompletionRequest.From(_request);
 
@@ -18,7 +18,7 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request)
             _ => GetCategoryCompletions(completionRequest.Params),
         };
 
-        return Response.OfSuccess(completionRequest.Id, items);
+        return Task.FromResult<Response?>(Response.OfSuccess(completionRequest.Id, items));
     }
 
     private HashSet<CompletionItem> GetCategoryCompletions(
@@ -56,14 +56,14 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request)
                     {
                         Start = new()
                         {
-                            Character = completionRequestParams.Postion.Character - 1,
-                            Line = completionRequestParams.Postion.Line,
+                            Character = completionRequestParams.Position.Character - 1,
+                            Line = completionRequestParams.Position.Line,
                         },
                         End = new()
                         {
-                            Line = completionRequestParams.Postion.Line,
+                            Line = completionRequestParams.Position.Line,
                             Character = (uint)(
-                                completionRequestParams.Postion.Character
+                                completionRequestParams.Position.Character
                                 + $"{{:{Path.GetFileNameWithoutExtension(d.Uri.AbsolutePath)}:}}[{d.Metadata.Title?.Name ?? ""}]".Length
                             ),
                         },

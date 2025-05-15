@@ -5,12 +5,12 @@ namespace NorgMaestro.Server.Rpc;
 
 public interface IRpcWriter
 {
-    public void EncodeAndWrite(object o);
+    public Task EncodeAndWrite(object o);
 }
 
 public interface IRpcReader
 {
-    public RpcMessage? Decode();
+    public Task<RpcMessage?> DecodeAsync();
 }
 
 public class RpcMessageReader(Stream read) : IRpcReader
@@ -19,9 +19,9 @@ public class RpcMessageReader(Stream read) : IRpcReader
 
     private const string ContentLengthHeader = "Content-Length: ";
 
-    public RpcMessage? Decode()
+    public async Task<RpcMessage?> DecodeAsync()
     {
-        string? header = _reader.ReadLine();
+        string? header = await _reader.ReadLineAsync();
         bool headerExists = header?.StartsWith(ContentLengthHeader) ?? false;
         if (headerExists is false)
         {
@@ -36,18 +36,17 @@ public class RpcMessageReader(Stream read) : IRpcReader
             return null;
         }
 
-        string? newline = _reader.ReadLine();
+        string? newline = await _reader.ReadLineAsync();
         bool newLinesExists = newline?.SequenceEqual("") ?? false;
         if (newLinesExists is false)
         {
             return null;
         }
 
-        char[] buffer = new char[contentLength];
-        _ = _reader.Read(buffer, 0, contentLength);
-        string content = string.Concat(buffer);
+        var buffer = new char[contentLength];
+        _ = await _reader.ReadAsync(buffer, 0, contentLength);
 
-        RpcMessage? pson = JsonSerializer.Deserialize<RpcMessage>(content);
+        RpcMessage? pson = JsonSerializer.Deserialize<RpcMessage>(string.Concat(buffer));
 
         return pson;
     }
@@ -59,10 +58,10 @@ public class RpcMessageWriter(Stream write) : IRpcWriter
 
     private const string ContentLengthHeader = "Content-Length: ";
 
-    public void EncodeAndWrite(object o)
+    public async Task EncodeAndWrite(object o)
     {
         string body = Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(o));
-        Writer.Write(string.Concat(ContentLengthHeader, body.Length, "\r\n\r\n", body));
-        Writer.Flush();
+        await Writer.WriteAsync(string.Concat(ContentLengthHeader, body.Length, "\r\n\r\n", body));
+        await Writer.FlushAsync();
     }
 }

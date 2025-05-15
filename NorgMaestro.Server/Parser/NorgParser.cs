@@ -21,19 +21,10 @@ public record MetaField
     public required TextRange Range { get; init; }
 }
 
-internal interface INorgParser
-{
-    public static abstract NeorgMetadata GetMetadata(Uri fileUri);
-    public static abstract Dictionary<Uri, HashSet<ReferenceLocation>> GetReferences(
-        Uri fileUri,
-        string[] content
-    );
-    public static abstract NorgLink? ParseLink(Uri fileUri, Position position, string line);
-}
 
-internal partial class NorgParser : INorgParser
+internal static partial class NorgParser
 {
-    public static NeorgMetadata GetMetadata(Uri fileUri)
+    public static async Task<NeorgMetadata> GetMetadata(Uri fileUri)
     {
         NeorgMetadata metadata = new() { FileUri = fileUri };
 
@@ -45,10 +36,9 @@ internal partial class NorgParser : INorgParser
                 FileShare.ReadWrite
             )
         )
+        using (StreamReader streamReader = new(fs, true))
         {
-            using StreamReader streamReader = new(fs, true);
-
-            string? line = streamReader.ReadLine()?.Trim();
+            string? line = (await streamReader.ReadLineAsync())?.Trim();
             bool? insideMetadata = null;
             uint lineNr = 0;
             while (line is not null)
@@ -139,7 +129,7 @@ internal partial class NorgParser : INorgParser
                                 },
                             }
                         );
-                        line = streamReader.ReadLine();
+                        line = await streamReader.ReadLineAsync();
                         lineNr++;
 
                         while (line is not null && !line.EndsWith(']'))
@@ -164,7 +154,7 @@ internal partial class NorgParser : INorgParser
                                     }
                                 );
                             }
-                            line = streamReader.ReadLine();
+                            line = await streamReader.ReadLineAsync();
                             lineNr++;
                         }
 
@@ -225,7 +215,7 @@ internal partial class NorgParser : INorgParser
 
                 if (line is not null)
                 {
-                    line = streamReader.ReadLine();
+                    line = await streamReader.ReadLineAsync();
                     lineNr++;
                 }
             }
@@ -258,12 +248,11 @@ internal partial class NorgParser : INorgParser
             NorgLink[] norgLinks = ParseLinks(fileUri, lineNumber, line);
             foreach (NorgLink link in norgLinks)
             {
-                ReferenceLocation refLocation =
-                    new()
-                    {
-                        Line = line,
-                        Location = new() { Uri = fileUri.AbsoluteUri, Range = link.AbsoluteRange },
-                    };
+                ReferenceLocation refLocation = new()
+                {
+                    Line = line,
+                    Location = new() { Uri = fileUri.AbsoluteUri, Range = link.AbsoluteRange },
+                };
                 references[link.GetFileLinkUri()] = references.TryGetValue(
                     link.GetFileLinkUri(),
                     out HashSet<ReferenceLocation>? value
@@ -279,7 +268,7 @@ internal partial class NorgParser : INorgParser
     private static NorgLink[] ParseLinks(Uri fileUri, uint lineNr, string line)
     {
         MatchCollection matches = NorgFileLinkRegex().Matches(line);
-        return matches.Select(m => NorgLink.From(fileUri, lineNr, m)).ToArray();
+        return [.. matches.Select(m => NorgLink.From(fileUri, lineNr, m))];
     }
 
     public static NorgLink? ParseLink(Uri fileUri, Position position, string line)

@@ -7,26 +7,26 @@ public class HoverHandler(RpcMessage request) : IMessageHandler
 {
     private readonly RpcMessage _request = request;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         HoverRequest hoverRequest = HoverRequest.From(_request);
 
         string? line = FileUtil
             .ReadRange(
                 hoverRequest.Params.TextDocument.Uri,
-                new() { Start = hoverRequest.Params.Postion, End = hoverRequest.Params.Postion, }
+                new() { Start = hoverRequest.Params.Position, End = hoverRequest.Params.Position }
             )
             .FirstOrDefault("");
 
         NorgLink? link = NorgParser.ParseLink(
             hoverRequest.Params.TextDocument.Uri,
-            hoverRequest.Params.Postion,
+            hoverRequest.Params.Position,
             line
         );
 
         if (link is null)
         {
-            return Response.OfSuccess(hoverRequest.Id);
+            return Task.FromResult<Response?>(Response.OfSuccess(hoverRequest.Id));
         }
 
         var topRange = new TextRange()
@@ -36,13 +36,15 @@ public class HoverHandler(RpcMessage request) : IMessageHandler
         };
         var topLines = FileUtil.ReadRange(link.GetFileLinkUri(), topRange);
 
-        return Response.OfSuccess(
-            hoverRequest.Id,
-            new Hover()
-            {
-                Range = topRange,
-                Contents = new() { Language = "norg", Value = string.Join('\n', topLines), }
-            }
+        return Task.FromResult<Response?>(
+            Response.OfSuccess(
+                hoverRequest.Id,
+                new Hover()
+                {
+                    Range = topRange,
+                    Contents = new() { Language = "norg", Value = string.Join('\n', topLines) },
+                }
+            )
         );
     }
 }

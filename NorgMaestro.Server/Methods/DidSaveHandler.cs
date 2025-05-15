@@ -7,10 +7,10 @@ public class DidSaveHandler(LanguageServerState state, RpcMessage request) : IMe
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
-    public Response? HandleRequest()
+    public async Task<Response?> HandleRequest()
     {
         DidSaveNotification didSaveNotification = DidSaveNotification.From(_request);
-        _ = _state.UpdateDocument(didSaveNotification.Params.TextDocument.Uri);
+        _ = await _state.UpdateDocument(didSaveNotification.Params.TextDocument.Uri);
         return null;
     }
 }

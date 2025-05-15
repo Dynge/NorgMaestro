@@ -18,20 +18,20 @@ public sealed class RpcReaderTests
         _inputWriter = new StreamWriter(_inputStream, Encoding.UTF8);
     }
 
-    private void SendToStream(string data)
+    private async Task SendToStream(string data)
     {
-        _inputWriter.Write(data);
-        _inputWriter.Flush();
+        await _inputWriter.WriteAsync(data);
+        await _inputWriter.FlushAsync();
         _inputStream.Position = 0;
     }
 
     [Fact]
-    public void ShouldReadJsonRpcMessage()
+    public async Task ShouldReadJsonRpcMessage()
     {
-        var data = File.ReadAllText("./Resources/RpcMessages/initialize");
-        SendToStream(data);
+        var data = await File.ReadAllTextAsync("./Resources/RpcMessages/initialize");
+        await SendToStream(data);
 
-        var decodedMessage = _reader.Decode();
+        var decodedMessage = await _reader.DecodeAsync();
         if (decodedMessage is null)
         {
             Assert.Fail("decodedMessage is null");

@@ -4,14 +4,14 @@ namespace NorgMaestro.Server.Methods;
 
 public class EmptyHandler(RpcMessage request) : IMessageHandler
 {
-    private readonly RpcMessage _request =request;
+    private readonly RpcMessage _request = request;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         return _request.Id switch
         {
-            int id => Response.OfSuccess(id),
-            _ => null,
+            int id => Task.FromResult<Response?>(Response.OfSuccess(id)),
+            _ => Task.FromResult<Response?>(null),
         };
     }
 }
