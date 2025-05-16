@@ -10,7 +10,25 @@ public class InitializeHandler(LanguageServerState state, RpcMessage request) : 
     public async Task<Response?> HandleRequest()
     {
         InitializeRequest initRequest = InitializeRequest.From(_request);
-        await _state.Initialize(initRequest.Params.RootUri);
+        Uri rootUri;
+        if (
+            initRequest.Params.WorkspaceFolders is not null
+            && initRequest.Params.WorkspaceFolders.Any()
+        )
+        {
+            rootUri = initRequest.Params.WorkspaceFolders.First().Uri;
+        }
+        else if (initRequest.Params.RootUri is not null)
+        {
+            rootUri = initRequest.Params.RootUri;
+        }
+        else
+        {
+            throw new ArgumentException(
+                $"Found no root folder in init params: {initRequest.Params}"
+            );
+        }
+        await _state.Initialize(rootUri);
         InitializeResultParams res = new()
         {
             Capabilities = new()

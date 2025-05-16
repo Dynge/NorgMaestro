@@ -9,7 +9,7 @@ public record InitializeRequest : RpcMessage
     public new required int Id { get; init; }
 
     [JsonPropertyName("params")]
-    public new InitializeRequestParams Params { get; init; }
+    public new required InitializeRequestParams Params { get; init; }
 
     public static InitializeRequest From(RpcMessage message)
     {
@@ -18,21 +18,35 @@ public record InitializeRequest : RpcMessage
             JsonRpc = message.JsonRpc,
             Id = message.Id!.Value,
             Method = message.Method,
-            Params = message.Params!.Value.Deserialize<InitializeRequestParams>(),
+            Params =
+                message.Params!.Value.Deserialize<InitializeRequestParams>()
+                ?? throw new ArgumentException($"Invalid params object: {message.Params}"),
         };
     }
 }
 
-public readonly record struct InitializeRequestParams
+public record InitializeRequestParams
 {
     [JsonPropertyName("capabilities")]
     public JsonElement? Capabilities { get; init; }
 
     [JsonPropertyName("rootUri")]
-    public Uri RootUri { get; init; }
+    public Uri? RootUri { get; init; } = null;
+
+    [JsonPropertyName("workspaceFolders")]
+    public IEnumerable<WorkspaceFolder>? WorkspaceFolders { get; init; } = null;
 
     [JsonPropertyName("processId")]
     public int? ProcessId { get; init; }
+}
+
+public readonly record struct WorkspaceFolder
+{
+    [JsonPropertyName("uri")]
+    public Uri Uri { get; init; }
+
+    [JsonPropertyName("name")]
+    public string Name { get; init; }
 }
 
 public readonly record struct CompletionOptions
