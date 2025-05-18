@@ -1,10 +1,10 @@
 .PHONY: test clean package all
 
+build:
+	dotnet build
+
 test:
 	dotnet test
-
-package:
-	dotnet build
 
 run:
 	dotnet run
