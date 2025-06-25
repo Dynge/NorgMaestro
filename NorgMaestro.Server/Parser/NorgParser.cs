@@ -21,7 +21,6 @@ public record MetaField
     public required TextRange Range { get; init; }
 }
 
-
 internal static partial class NorgParser
 {
     public static async Task<NeorgMetadata> GetMetadata(Uri fileUri)
@@ -38,11 +37,13 @@ internal static partial class NorgParser
         )
         using (StreamReader streamReader = new(fs, true))
         {
+            
             string? line = (await streamReader.ReadLineAsync())?.Trim();
             bool? insideMetadata = null;
             uint lineNr = 0;
             while (line is not null)
             {
+                
                 insideMetadata = line switch
                 {
                     "@document.meta" => true,
@@ -51,9 +52,11 @@ internal static partial class NorgParser
                 };
                 if (insideMetadata is false)
                 {
+                    
                     break;
                 }
 
+                
                 switch (line)
                 {
                     case string when NorgMetaTitle().Matches(line).Count > 0:
@@ -106,13 +109,26 @@ internal static partial class NorgParser
                         break;
 
                     case string when NorgMetaCategories().Matches(line).Count > 0:
+                        
                         List<MetaField> categories = [];
                         match = NorgMetaCategories().Matches(line).First();
+                        
                         matchEnd = (uint)(match.Index + match.Length);
+                        
+                        if (line.Length <= matchEnd)
+                        {
+                            // There is nothing after the category
+                            metadata = metadata with
+                            {
+                                Categories = [],
+                            };
+                            break;
+                        }
                         if (line[(int)matchEnd] == '[')
                         {
                             matchEnd++;
                         }
+                        
 
                         line = line[(int)matchEnd..];
                         uint categoryStart = matchEnd;
@@ -132,8 +148,11 @@ internal static partial class NorgParser
                         line = await streamReader.ReadLineAsync();
                         lineNr++;
 
+                        
+
                         while (line is not null && !line.EndsWith(']'))
                         {
+                            
                             categoryStart = (uint)line.TakeWhile(char.IsWhiteSpace).Count();
                             categoryEnd = (uint)line.Length;
                             if (line.Trim().Length is not 0)
@@ -210,20 +229,25 @@ internal static partial class NorgParser
                         break;
 
                     default:
+                        
                         break;
                 }
 
                 if (line is not null)
                 {
+                    
                     line = await streamReader.ReadLineAsync();
                     lineNr++;
                 }
+                
             }
             if (insideMetadata is true)
             {
+                
                 // Malformed metadata - should have an end statement.
                 return new() { FileUri = metadata.FileUri };
             }
+            
         }
         return metadata;
     }
@@ -284,25 +308,25 @@ internal static partial class NorgParser
     [GeneratedRegex(@"{:(\$/)?(?<File>(\w|[-./~])+):}\[(?<LinkText>.+)\]")]
     private static partial Regex NorgFileLinkRegex();
 
-    [GeneratedRegex(@"^title: ")]
+    [GeneratedRegex(@"^title: ?")]
     private static partial Regex NorgMetaTitle();
 
-    [GeneratedRegex(@"^description: ")]
+    [GeneratedRegex(@"^description: ?")]
     private static partial Regex NorgMetaDescription();
 
-    [GeneratedRegex(@"^authors: ")]
+    [GeneratedRegex(@"^authors: ?")]
     private static partial Regex NorgMetaAuthors();
 
-    [GeneratedRegex(@"^categories: ")]
+    [GeneratedRegex(@"^categories: ?")]
     private static partial Regex NorgMetaCategories();
 
-    [GeneratedRegex(@"^created: ")]
+    [GeneratedRegex(@"^created: ?")]
     private static partial Regex NorgMetaCreated();
 
-    [GeneratedRegex(@"^updated: ")]
+    [GeneratedRegex(@"^updated: ?")]
     private static partial Regex NorgMetaUpdated();
 
-    [GeneratedRegex(@"^version: ")]
+    [GeneratedRegex(@"^version: ?")]
     private static partial Regex NorgMetaVersion();
 }
 

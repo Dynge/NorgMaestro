@@ -1,0 +1,3 @@
+Content-Length: 103
+
+{"method": "initialize", "jsonrpc": "1.0", "id": 1, "params":{"rootUri": "file:///home/dynge/notes/"}}

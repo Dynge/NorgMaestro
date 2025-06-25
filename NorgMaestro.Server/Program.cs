@@ -11,6 +11,6 @@ public sealed class Program
             new RpcMessageReader(Console.OpenStandardInput()),
             new()
         );
-        await server.Startup();
+        var _ = server.Startup();
     }
 }
