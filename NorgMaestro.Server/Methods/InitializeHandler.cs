@@ -11,23 +11,22 @@ public class InitializeHandler(LanguageServerState state, RpcMessage request) : 
     {
         InitializeRequest initRequest = InitializeRequest.From(_request);
         await _state.Initialize(initRequest.Params.RootUri);
-        InitializeResultParams res =
-            new()
+        InitializeResultParams res = new()
+        {
+            Capabilities = new()
             {
-                Capabilities = new()
+                CompletionProvider = new()
                 {
-                    CompletionProvider = new()
-                    {
-                        ResolveProvider = false,
-                        TriggerCharacters = ['æ', 'ø', 'å', '{']
-                    },
-                    WorkspaceSymbolProvider = true,
-                    ReferencesProvider = true,
-                    CallHierarchyProvider = true,
-                    RenameProvider = true,
-                    HoverProvider = true,
-                }
-            };
+                    ResolveProvider = false,
+                    TriggerCharacters = ['æ', 'ø', 'å', '{'],
+                },
+                WorkspaceSymbolProvider = true,
+                ReferencesProvider = true,
+                CallHierarchyProvider = true,
+                RenameProvider = true,
+                HoverProvider = true,
+            },
+        };
 
         return Response.OfSuccess(initRequest.Id, res);
     }

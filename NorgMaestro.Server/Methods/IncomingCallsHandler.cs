@@ -21,7 +21,9 @@ public class IncomingCallsHandler(LanguageServerState state, RpcMessage request)
             );
         }
 
-        List<IncomingCallsResponseParams> response = [.. refs.Select(reference =>
+        List<IncomingCallsResponseParams> response =
+        [
+            .. refs.Select(reference =>
             {
                 _state.Documents.TryGetValue(new(reference.Location.Uri), out var doc);
                 return new IncomingCallsResponseParams()
@@ -36,7 +38,8 @@ public class IncomingCallsHandler(LanguageServerState state, RpcMessage request)
                     },
                     FromRanges = [reference.Location.Range],
                 };
-            })];
+            }),
+        ];
 
         return Task.FromResult<Response?>(Response.OfSuccess(completionRequest.Id, response));
     }

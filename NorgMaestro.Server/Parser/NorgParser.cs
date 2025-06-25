@@ -37,13 +37,11 @@ internal static partial class NorgParser
         )
         using (StreamReader streamReader = new(fs, true))
         {
-            
             string? line = (await streamReader.ReadLineAsync())?.Trim();
             bool? insideMetadata = null;
             uint lineNr = 0;
             while (line is not null)
             {
-                
                 insideMetadata = line switch
                 {
                     "@document.meta" => true,
@@ -52,11 +50,9 @@ internal static partial class NorgParser
                 };
                 if (insideMetadata is false)
                 {
-                    
                     break;
                 }
 
-                
                 switch (line)
                 {
                     case string when NorgMetaTitle().Matches(line).Count > 0:
@@ -109,12 +105,12 @@ internal static partial class NorgParser
                         break;
 
                     case string when NorgMetaCategories().Matches(line).Count > 0:
-                        
+
                         List<MetaField> categories = [];
                         match = NorgMetaCategories().Matches(line).First();
-                        
+
                         matchEnd = (uint)(match.Index + match.Length);
-                        
+
                         if (line.Length <= matchEnd)
                         {
                             // There is nothing after the category
@@ -128,7 +124,6 @@ internal static partial class NorgParser
                         {
                             matchEnd++;
                         }
-                        
 
                         line = line[(int)matchEnd..];
                         uint categoryStart = matchEnd;
@@ -148,11 +143,8 @@ internal static partial class NorgParser
                         line = await streamReader.ReadLineAsync();
                         lineNr++;
 
-                        
-
                         while (line is not null && !line.EndsWith(']'))
                         {
-                            
                             categoryStart = (uint)line.TakeWhile(char.IsWhiteSpace).Count();
                             categoryEnd = (uint)line.Length;
                             if (line.Trim().Length is not 0)
@@ -229,25 +221,21 @@ internal static partial class NorgParser
                         break;
 
                     default:
-                        
+
                         break;
                 }
 
                 if (line is not null)
                 {
-                    
                     line = await streamReader.ReadLineAsync();
                     lineNr++;
                 }
-                
             }
             if (insideMetadata is true)
             {
-                
                 // Malformed metadata - should have an end statement.
                 return new() { FileUri = metadata.FileUri };
             }
-            
         }
         return metadata;
     }

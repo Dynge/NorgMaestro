@@ -2,8 +2,7 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class CompletionHandler(LanguageServerState state, RpcMessage request)
-    : IMessageHandler
+public class CompletionHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;

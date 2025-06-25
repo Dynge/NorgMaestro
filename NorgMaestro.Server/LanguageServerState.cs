@@ -31,17 +31,13 @@ public class LanguageServerState
     {
         var metadata = await NorgParser.GetMetadata(fileUri);
         var content = await File.ReadAllLinesAsync(fileUri.LocalPath);
-        var references = NorgParser.GetReferences(
-            fileUri,
-            content
-        );
-        var doc =
-            new Document()
-            {
-                Uri = fileUri,
-                Metadata = metadata,
-                Content = content,
-            };
+        var references = NorgParser.GetReferences(fileUri, content);
+        var doc = new Document()
+        {
+            Uri = fileUri,
+            Metadata = metadata,
+            Content = content,
+        };
 
         _documents[fileUri] = doc;
         foreach (KeyValuePair<Uri, HashSet<ReferenceLocation>> refKvp in references)

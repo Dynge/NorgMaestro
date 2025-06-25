@@ -18,7 +18,7 @@ public record InitializeRequest : RpcMessage
             JsonRpc = message.JsonRpc,
             Id = message.Id!.Value,
             Method = message.Method,
-            Params = message.Params!.Value.Deserialize<InitializeRequestParams>()
+            Params = message.Params!.Value.Deserialize<InitializeRequestParams>(),
         };
     }
 }

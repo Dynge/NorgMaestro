@@ -18,7 +18,7 @@ public record RenameRequest : RpcMessage
             JsonRpc = message.JsonRpc,
             Id = message.Id!.Value,
             Method = message.Method,
-            Params = message.Params!.Value.Deserialize<RenameRequestParams>()!
+            Params = message.Params!.Value.Deserialize<RenameRequestParams>()!,
         };
     }
 }

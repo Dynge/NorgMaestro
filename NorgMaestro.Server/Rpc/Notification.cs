@@ -15,7 +15,7 @@ public record Notification : Message
         return new()
         {
             JsonRpc = "2.0",
-            Params = new() { Message = message, Type = type }
+            Params = new() { Message = message, Type = type },
         };
     }
 }

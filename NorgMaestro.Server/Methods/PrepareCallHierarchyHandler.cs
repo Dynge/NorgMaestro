@@ -2,10 +2,11 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class PrepareCallHierarchyHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
+public class PrepareCallHierarchyHandler(LanguageServerState state, RpcMessage request)
+    : IMessageHandler
 {
-    private readonly RpcMessage _request =request;
-    private readonly LanguageServerState _state =state;
+    private readonly RpcMessage _request = request;
+    private readonly LanguageServerState _state = state;
 
     public Task<Response?> HandleRequest()
     {
@@ -28,7 +29,7 @@ public class PrepareCallHierarchyHandler(LanguageServerState state, RpcMessage r
                     Start = new() { Line = 0, Character = 0 },
                     End = new() { Line = 0, Character = 0 },
                 },
-            }
+            },
         ];
         return Task.FromResult<Response?>(Response.OfSuccess(initRequest.Id, items));
     }

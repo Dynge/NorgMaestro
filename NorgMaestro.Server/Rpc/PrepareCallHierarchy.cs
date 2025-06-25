@@ -18,7 +18,7 @@ public record PrepareCallHierarchyRequest : RpcMessage
             JsonRpc = message.JsonRpc,
             Id = message.Id!.Value,
             Method = message.Method,
-            Params = message.Params!.Value.Deserialize<PrepareCallHierarchyRequestParams>()!
+            Params = message.Params!.Value.Deserialize<PrepareCallHierarchyRequestParams>()!,
         };
     }
 }

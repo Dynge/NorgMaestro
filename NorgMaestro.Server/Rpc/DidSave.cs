@@ -14,7 +14,7 @@ public record DidSaveNotification : RpcMessage
         {
             JsonRpc = message.JsonRpc,
             Method = message.Method,
-            Params = message.Params!.Value.Deserialize<DidSaveRequestParams>()!
+            Params = message.Params!.Value.Deserialize<DidSaveRequestParams>()!,
         };
     }
 }
