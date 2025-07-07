@@ -37,7 +37,7 @@ internal sealed class NeorgLspServer(
         {
             // TODO: Create shutdown exception
             // Shutdown
-            return;
+            Environment.Exit(0);
         }
     }
 }
