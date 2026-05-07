@@ -37,7 +37,16 @@ public partial class DocumentSymbolHandler(LanguageServerState state, RpcMessage
                 Start = new() { Line = (uint)i, Character = startCharacter },
                 End = new() { Line = (uint)i, Character = endCharacter },
             };
-            symbols.Add(new() { Name = title, Kind = SymbolKind.StringKind, Range = range, SelectionRange = range });
+            symbols.Add(
+                new()
+                {
+                    Name = title,
+                    Kind = SymbolKind.StringKind,
+                    Range = range,
+                    SelectionRange = range,
+                    Children = [],
+                }
+            );
         }
 
         return Response.OfSuccess(symbolRequest.Id, symbols);

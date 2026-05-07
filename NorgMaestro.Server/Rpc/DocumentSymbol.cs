@@ -44,5 +44,5 @@ public record DocumentSymbol
     public required TextRange SelectionRange { get; init; }
 
     [JsonPropertyName("children")]
-    public DocumentSymbol[]? Children { get; init; }
+    public DocumentSymbol[] Children { get; init; } = [];
 }
