@@ -34,18 +34,17 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
             return Task.FromResult<Response?>(Response.OfSuccess(referenceRequest.Id));
         }
 
-        HashSet<Location> references =
-        [
-            .. _state
-                .References.GetValueOrDefault(link.GetFileLinkUri(), [])
-                .Select(reference => reference.Location),
-        ];
+        Uri targetUri = _state.ResolveLinkUri(link);
+        HashSet<Location> references = _state
+            .References.GetValueOrDefault(targetUri, [])
+            .Select(reference => reference.Location)
+            .ToHashSet();
         if (referenceRequest.Params.Context.IncludeDeclaration)
         {
             _ = references.Add(
                 new()
                 {
-                    Uri = link.GetFileLinkUri().AbsoluteUri,
+                    Uri = targetUri.AbsoluteUri,
                     Range = new()
                     {
                         Start = new() { Line = 0, Character = 0 },

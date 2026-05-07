@@ -29,7 +29,8 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
             return Task.FromResult<Response?>(Response.OfSuccess(renameRequest.Id));
         }
 
-        Document cursorDocument = _state.Documents[link.GetFileLinkUri()];
+        Uri targetUri = _state.ResolveLinkUri(link);
+        Document cursorDocument = _state.Documents[targetUri];
         List<TextEdit> changeInCursor = cursorDocument.Metadata.Title switch
         {
             MetaField titleField =>
@@ -40,7 +41,7 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
         };
 
         Dictionary<string, TextEdit[]> changeInRefs = _state
-            .References[link.GetFileLinkUri()]
+            .References[targetUri]
             .ToLookup(reference => reference.Location.Uri)
             .ToDictionary(
                 kvp => kvp.Key,
@@ -51,7 +52,7 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
                             NewText = renameRequest.Params.NewName,
                             Range = NorgParser
                                 .ParseLink(
-                                    link.GetFileLinkUri(),
+                                    targetUri,
                                     reference.Location.Range.Start,
                                     reference.Line
                                 )!
@@ -60,14 +61,14 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
                         .ToArray()
             );
 
-        _ = changeInRefs.TryGetValue(link.GetFileLinkUri().AbsoluteUri, out TextEdit[]? value);
+        _ = changeInRefs.TryGetValue(targetUri.AbsoluteUri, out TextEdit[]? value);
         List<TextEdit> textEdits = value switch
         {
             TextEdit[] => [.. value],
             _ => [],
         };
         textEdits.AddRange(changeInCursor);
-        changeInRefs[link.GetFileLinkUri().AbsoluteUri] = [.. textEdits];
+        changeInRefs[targetUri.AbsoluteUri] = [.. textEdits];
 
         WorkspaceEdit edit = new() { Changes = changeInRefs };
 

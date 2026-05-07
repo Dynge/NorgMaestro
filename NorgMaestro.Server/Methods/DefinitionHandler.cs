@@ -34,7 +34,8 @@ public class DefinitionHandler(LanguageServerState state, RpcMessage request) : 
             return Response.OfSuccess(definitionRequest.Id);
         }
 
-        if (_state.Documents.TryGetValue(link.GetFileLinkUri(), out Document? doc) is false)
+        Uri targetUri = _state.ResolveLinkUri(link);
+        if (_state.Documents.TryGetValue(targetUri, out Document? doc) is false)
         {
             return Response.OfSuccess(definitionRequest.Id);
         }

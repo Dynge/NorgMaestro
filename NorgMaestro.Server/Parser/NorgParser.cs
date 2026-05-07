@@ -312,7 +312,7 @@ internal partial class NorgParser : INorgParser
         return match is null ? null : NorgLink.From(fileUri, position.Line, match);
     }
 
-    [GeneratedRegex(@"{:(\$/)?(?<File>(\w|[-./~])+):}\[(?<LinkText>.+)\]")]
+    [GeneratedRegex(@"{:(?<File>[^:\[\]\{\}]+):}\[(?<LinkText>.+)\]")]
     private static partial Regex NorgFileLinkRegex();
 
     [GeneratedRegex(@"^title: ?")]

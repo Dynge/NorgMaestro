@@ -21,7 +21,7 @@ public class DocumentLinkHandler(LanguageServerState state, RpcMessage request) 
             .Select(link => new DocumentLink()
             {
                 Range = link.AbsoluteRange,
-                Target = link.GetFileLinkUri().AbsoluteUri,
+                Target = _state.ResolveLinkUri(link).AbsoluteUri,
                 Tooltip = link.LinkText,
             })
             .ToArray();

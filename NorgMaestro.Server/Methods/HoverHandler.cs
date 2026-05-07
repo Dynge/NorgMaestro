@@ -3,9 +3,10 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class HoverHandler(RpcMessage request) : IMessageHandler
+public class HoverHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
     private readonly RpcMessage _request = request;
+    private readonly LanguageServerState _state = state;
 
     public Task<Response?> HandleRequest()
     {
@@ -34,7 +35,8 @@ public class HoverHandler(RpcMessage request) : IMessageHandler
             Start = new() { Line = 0, Character = 0 },
             End = new() { Line = 200, Character = 0 },
         };
-        var topLines = FileUtil.ReadRange(link.GetFileLinkUri(), topRange);
+        Uri targetUri = _state.ResolveLinkUri(link);
+        var topLines = FileUtil.ReadRange(targetUri, topRange);
 
         return Task.FromResult<Response?>(
             Response.OfSuccess(

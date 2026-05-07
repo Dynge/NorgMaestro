@@ -66,4 +66,57 @@ public sealed class DefinitionHandlerTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public void ShouldResolveWorkspaceRelativeLinks()
+    {
+        string tempDir = Directory.CreateTempSubdirectory("norgmaestro-definition-root").FullName;
+        try
+        {
+            string notesDir = Path.Combine(tempDir, "notes");
+            Directory.CreateDirectory(notesDir);
+
+            string targetPath = Path.Combine(notesDir, "202601010201.norg");
+            string sourcePath = Path.Combine(notesDir, "202601010202.norg");
+
+            File.WriteAllText(targetPath, "@document.meta\ntitle: Root Target\n@end\n");
+            File.WriteAllText(sourcePath, "@document.meta\ntitle: Root Source\n@end\n\nSee {:$/notes/202601010201:}[Root Target]");
+
+            Uri rootUri = new(Path.GetFullPath(tempDir));
+            Uri sourceUri = new(Path.GetFullPath(sourcePath));
+
+            LanguageServerState state = new();
+            state.Initialize(rootUri);
+
+            RpcMessage request = new()
+            {
+                Id = 43,
+                JsonRpc = "2.0",
+                Method = "textDocument/definition",
+                Params = JsonSerializer.SerializeToElement(
+                    new
+                    {
+                        textDocument = new { uri = sourceUri.AbsoluteUri },
+                        position = new { line = 4, character = 10 }
+                    }
+                )
+            };
+
+            DefinitionHandler handler = new(state, request);
+            Response? response = handler.HandleRequest();
+
+            response.Should().NotBeNull();
+            JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
+            Location[]? locations = result.Deserialize<Location[]>();
+
+            locations.Should().NotBeNull();
+            locations!.Should().ContainSingle();
+            Location location = locations[0] ?? throw new Xunit.Sdk.XunitException("Missing location");
+            location.Uri.Should().Contain("202601010201.norg");
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
 }

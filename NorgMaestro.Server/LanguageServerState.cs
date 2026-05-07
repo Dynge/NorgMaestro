@@ -8,6 +8,7 @@ public class LanguageServerState
 {
     private readonly Dictionary<Uri, Document> _documents = [];
     private readonly Dictionary<Uri, HashSet<ReferenceLocation>> _references = [];
+    private Uri? _workspaceRoot;
 
     public ReadOnlyDictionary<Uri, Document> Documents => _documents.AsReadOnly();
     public ReadOnlyDictionary<Uri, HashSet<ReferenceLocation>> References =>
@@ -15,6 +16,7 @@ public class LanguageServerState
 
     public async Task Initialize(Uri rootUri)
     {
+        _workspaceRoot = rootUri;
         foreach (
             string note in Directory.GetFiles(
                 rootUri.LocalPath,
@@ -100,6 +102,60 @@ public class LanguageServerState
                 _references.Remove(targetUri);
             }
         }
+    }
+
+    internal Uri ResolveLinkUri(NorgLink link)
+    {
+        string filePath = link.File;
+        if (filePath.StartsWith("$/"))
+        {
+            if (_workspaceRoot is null)
+            {
+                return ToNorgUri(Path.Join(Directory.GetParent(link.NorgFile.AbsolutePath)!.FullName, filePath[2..]));
+            }
+            return ToNorgUri(Path.Join(_workspaceRoot.LocalPath, filePath[2..]));
+        }
+
+        if (filePath.StartsWith("~/"))
+        {
+            string homePath = Environment.GetFolderPath(Environment.SpecialFolder.UserProfile);
+            return ToNorgUri(Path.Join(homePath, filePath[2..]));
+        }
+
+        if (Path.IsPathRooted(filePath))
+        {
+            return ToNorgUri(filePath);
+        }
+
+        string parent = Directory.GetParent(link.NorgFile.AbsolutePath)!.FullName;
+        return ToNorgUri(Path.Join(parent, filePath));
+    }
+
+    private static Uri ToNorgUri(string path)
+    {
+        string norgPath = path.EndsWith(".norg") ? path : path + ".norg";
+        return new Uri(Path.GetFullPath(norgPath));
+    }
+
+    private Dictionary<Uri, HashSet<ReferenceLocation>> GetReferences(Uri fileUri, string[] content)
+    {
+        Dictionary<Uri, HashSet<ReferenceLocation>> references = [];
+        foreach (NorgLink link in NorgParser.ParseLinks(fileUri, content))
+        {
+            Uri resolvedUri = ResolveLinkUri(link);
+            string line = content[(int)link.AbsoluteRange.Start.Line];
+            ReferenceLocation refLocation = new()
+            {
+                Line = line,
+                Location = new() { Uri = fileUri.AbsoluteUri, Range = link.AbsoluteRange }
+            };
+
+            references[resolvedUri] = references.TryGetValue(resolvedUri, out HashSet<ReferenceLocation>? value)
+                ? ([.. value, refLocation])
+                : ([refLocation]);
+        }
+
+        return references;
     }
 }
 
