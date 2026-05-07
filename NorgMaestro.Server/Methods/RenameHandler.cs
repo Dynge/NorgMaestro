@@ -80,6 +80,8 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
 
         WorkspaceEdit edit = new() { Changes = changeInRefs };
 
+        _state.UpdateTitleInState(targetUri, renameRequest.Params.NewName);
+
         return Task.FromResult<Response?>(Response.OfSuccess(renameRequest.Id, edit));
     }
 }

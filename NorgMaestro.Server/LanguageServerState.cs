@@ -175,6 +175,34 @@ public class LanguageServerState
         return true;
     }
 
+    internal void UpdateTitleInState(Uri targetUri, string newTitle)
+    {
+        if (_documents.TryGetValue(targetUri, out Document? doc) is false)
+        {
+            return;
+        }
+
+        MetaField? oldTitle = doc.Metadata.Title;
+        if (oldTitle is null)
+        {
+            return;
+        }
+
+        TextRange newRange = new()
+        {
+            Start = oldTitle.Range.Start,
+            End = new()
+            {
+                Line = oldTitle.Range.Start.Line,
+                Character = oldTitle.Range.Start.Character + (uint)newTitle.Length,
+            },
+        };
+
+        MetaField updatedTitle = oldTitle with { Name = newTitle, Range = newRange };
+        NeorgMetadata updatedMetadata = doc.Metadata with { Title = updatedTitle };
+        _documents[targetUri] = doc with { Metadata = updatedMetadata };
+    }
+
     private static bool IsWithinRange(Position position, TextRange range)
     {
         if (position.Line < range.Start.Line || position.Line > range.End.Line)
