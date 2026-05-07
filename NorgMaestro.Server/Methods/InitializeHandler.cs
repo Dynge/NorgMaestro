@@ -44,6 +44,7 @@ public class InitializeHandler(LanguageServerState state, RpcMessage request) : 
                 RenameProvider = true,
                 HoverProvider = true,
                 DefinitionProvider = true,
+                DocumentSymbolProvider = true,
             },
         };
 

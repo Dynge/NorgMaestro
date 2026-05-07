@@ -80,6 +80,9 @@ public readonly record struct ServerCapabilities
 
     [JsonPropertyName("definitionProvider")]
     public bool? DefinitionProvider { get; init; }
+
+    [JsonPropertyName("documentSymbolProvider")]
+    public bool? DocumentSymbolProvider { get; init; }
 }
 
 public readonly record struct InitializeResultParams
