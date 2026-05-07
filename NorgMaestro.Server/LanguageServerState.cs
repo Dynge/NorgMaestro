@@ -29,6 +29,8 @@ public class LanguageServerState
 
     public async Task<Document?> UpdateDocument(Uri fileUri)
     {
+        RemoveReferencesFromDocument(fileUri);
+
         var metadata = await NorgParser.GetMetadata(fileUri);
         var content = await File.ReadAllLinesAsync(fileUri.LocalPath);
         var references = NorgParser.GetReferences(fileUri, content);
@@ -51,6 +53,53 @@ public class LanguageServerState
         }
 
         return doc;
+    }
+
+    public Dictionary<Uri, Diagnostic[]> GetDiagnostics()
+    {
+        Dictionary<Uri, List<Diagnostic>> diagnosticsByDoc = [];
+
+        foreach ((Uri targetUri, HashSet<ReferenceLocation> locations) in _references)
+        {
+            if (_documents.ContainsKey(targetUri))
+            {
+                continue;
+            }
+
+            foreach (ReferenceLocation location in locations)
+            {
+                Uri sourceUri = new(location.Location.Uri);
+                if (diagnosticsByDoc.TryGetValue(sourceUri, out List<Diagnostic>? diagnostics) is false)
+                {
+                    diagnostics = [];
+                    diagnosticsByDoc[sourceUri] = diagnostics;
+                }
+
+                diagnostics.Add(
+                    new()
+                    {
+                        Severity = DiagnosticSeverity.Warning,
+                        Range = location.Location.Range,
+                        Message = $"Unresolved note link: {targetUri.AbsolutePath}",
+                        Source = "norgmaestro",
+                    }
+                );
+            }
+        }
+
+        return diagnosticsByDoc.ToDictionary(kvp => kvp.Key, kvp => kvp.Value.ToArray());
+    }
+
+    private void RemoveReferencesFromDocument(Uri fileUri)
+    {
+        foreach ((Uri targetUri, HashSet<ReferenceLocation> locations) in _references.ToArray())
+        {
+            locations.RemoveWhere(reference => reference.Location.Uri == fileUri.AbsoluteUri);
+            if (locations.Count == 0)
+            {
+                _references.Remove(targetUri);
+            }
+        }
     }
 }
 

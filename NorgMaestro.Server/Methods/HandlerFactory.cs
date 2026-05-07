@@ -13,8 +13,8 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
         {
             MethodType.Shutdown => new ShutdownHandler(_writer, req),
             MethodType.Exit => new ExitHandler(_writer),
-            MethodType.DidSave => new DidSaveHandler(_state, req),
-            MethodType.Initialize => new InitializeHandler(_state, req),
+            MethodType.DidSave => new DidSaveHandler(_state, _writer, req),
+            MethodType.Initialize => new InitializeHandler(_state, _writer, req),
             MethodType.Initialized => new InitializedHandler(_writer),
             MethodType.Completion => new CompletionHandler(_state, req),
             MethodType.Hover => new HoverHandler(req),

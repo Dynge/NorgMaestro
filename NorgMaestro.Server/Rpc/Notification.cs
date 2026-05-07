@@ -18,6 +18,25 @@ public record Notification : Message
             Params = new() { Message = message, Type = type },
         };
     }
+
+    public static Message PublishDiagnostics(PublishDiagnosticsParams diagnostics)
+    {
+        return new RpcNotification<PublishDiagnosticsParams>()
+        {
+            JsonRpc = "2.0",
+            Method = "textDocument/publishDiagnostics",
+            Params = diagnostics,
+        };
+    }
+}
+
+public record RpcNotification<TParams> : Message
+{
+    [JsonPropertyName("method")]
+    public required string Method { get; init; }
+
+    [JsonPropertyName("params")]
+    public required TParams Params { get; init; }
 }
 
 public record NotificationParams

@@ -2,10 +2,12 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class InitializeHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
+public class InitializeHandler(LanguageServerState state, IRpcWriter writer, RpcMessage request)
+    : IMessageHandler
 {
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
+    private readonly IRpcWriter _writer = writer;
 
     public async Task<Response?> HandleRequest()
     {
@@ -29,6 +31,7 @@ public class InitializeHandler(LanguageServerState state, RpcMessage request) : 
             );
         }
         await _state.Initialize(rootUri);
+        PublishDiagnostics();
         InitializeResultParams res = new()
         {
             Capabilities = new()
@@ -49,6 +52,20 @@ public class InitializeHandler(LanguageServerState state, RpcMessage request) : 
         };
 
         return Response.OfSuccess(initRequest.Id, res);
+    }
+
+    private void PublishDiagnostics()
+    {
+        Dictionary<Uri, Diagnostic[]> diagnosticsByFile = _state.GetDiagnostics();
+        foreach (Document document in _state.Documents.Values)
+        {
+            Diagnostic[] diagnostics = diagnosticsByFile.GetValueOrDefault(document.Uri, []);
+            _writer.EncodeAndWrite(
+                Notification.PublishDiagnostics(
+                    new() { Uri = document.Uri.AbsoluteUri, Diagnostics = diagnostics }
+                )
+            );
+        }
     }
 }
 
