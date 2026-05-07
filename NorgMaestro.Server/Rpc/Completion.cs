@@ -57,12 +57,15 @@ public record CompletionItem
     public required string Label { get; init; }
 
     [JsonPropertyName("documentation")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public MarkupContent? LabelDetails { get; init; }
 
     [JsonPropertyName("textEdit")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public TextEdit? TextEdit { get; init; }
 
     [JsonPropertyName("kind")]
+    [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
     public CompletionKind? Kind { get; init; }
 }
 

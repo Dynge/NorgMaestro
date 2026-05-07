@@ -60,7 +60,7 @@ public class RpcMessageWriter(Stream write) : IRpcWriter
 
     public async Task EncodeAndWrite(object o)
     {
-        byte[] bodyBytes = JsonSerializer.SerializeToUtf8Bytes(o);
+        byte[] bodyBytes = JsonSerializer.SerializeToUtf8Bytes(o, JsonOptions.Default);
         string body = Encoding.UTF8.GetString(bodyBytes);
         await Writer.WriteAsync(string.Concat(ContentLengthHeader, bodyBytes.Length, "\r\n\r\n", body));
         await Writer.FlushAsync();

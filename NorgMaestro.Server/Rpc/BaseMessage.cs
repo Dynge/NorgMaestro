@@ -31,7 +31,7 @@ public record Response : Message
         {
             JsonRpc = "2.0",
             Id = id,
-            Result = JsonSerializer.SerializeToElement(res),
+            Result = JsonSerializer.SerializeToElement(res, JsonOptions.Default)
         };
     }
 
@@ -41,7 +41,7 @@ public record Response : Message
         {
             JsonRpc = "2.0",
             Id = id,
-            Error = JsonSerializer.SerializeToElement(err),
+            Error = JsonSerializer.SerializeToElement(err, JsonOptions.Default)
         };
     }
 }

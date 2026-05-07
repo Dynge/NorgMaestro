@@ -55,6 +55,17 @@ public sealed class RpcWriterTests
         int.Parse(match.Groups[1].Value).Should().Be(expectedByteLength);
     }
 
+    [Fact]
+    public void ShouldOmitNullKeysFromSerializedBody()
+    {
+        var payload = new { label = "hello", textEdit = (object?)null };
+        _writer.EncodeAndWrite(payload);
+
+        string written = ReadDataFromStream();
+        written.Should().Contain("\"label\":\"hello\"");
+        written.Should().NotContain("textEdit");
+    }
+
     private string ReadDataFromStream()
     {
         _outputStream.Position = 0;
