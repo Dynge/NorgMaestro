@@ -94,4 +94,47 @@ public sealed class PrepareRenameHandlerTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public void ShouldReturnFileRangeWhenCursorInsideLinkTarget()
+    {
+        string tempDir = Directory.CreateTempSubdirectory("norgmaestro-prepare-rename-file-range").FullName;
+        try
+        {
+            string sourcePath = Path.Combine(tempDir, "202601050103.norg");
+            File.WriteAllText(sourcePath, "See {:202601010101:}[Target]\n");
+
+            Uri sourceUri = new(Path.GetFullPath(sourcePath));
+            LanguageServerState state = new();
+            state.UpdateDocument(sourceUri);
+
+            RpcMessage request = new()
+            {
+                Id = 90,
+                JsonRpc = "2.0",
+                Method = "textDocument/prepareRename",
+                Params = JsonSerializer.SerializeToElement(
+                    new
+                    {
+                        textDocument = new { uri = sourceUri.AbsoluteUri },
+                        position = new { line = 0, character = 7 }
+                    }
+                )
+            };
+
+            PrepareRenameHandler handler = new(state, request);
+            Response? response = handler.HandleRequest();
+
+            JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
+            TextRange? range = result.Deserialize<TextRange>();
+            range.Should().NotBeNull();
+            range!.Start.Line.Should().Be(0);
+            range.Start.Character.Should().Be(6);
+            range.End.Character.Should().Be(18);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
 }

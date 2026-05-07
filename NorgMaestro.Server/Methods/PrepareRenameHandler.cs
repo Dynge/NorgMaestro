@@ -36,6 +36,29 @@ public class PrepareRenameHandler(LanguageServerState state, RpcMessage request)
             return Response.OfSuccess(prepareRenameRequest.Id);
         }
 
-        return Response.OfSuccess(prepareRenameRequest.Id, link.LinkTextRange);
+        TextRange range = IsWithinRange(prepareRenameRequest.Params.Position, link.FileRange)
+            ? link.FileRange
+            : link.LinkTextRange;
+        return Response.OfSuccess(prepareRenameRequest.Id, range);
+    }
+
+    private static bool IsWithinRange(Position position, TextRange range)
+    {
+        if (position.Line < range.Start.Line || position.Line > range.End.Line)
+        {
+            return false;
+        }
+
+        if (position.Line == range.Start.Line && position.Character < range.Start.Character)
+        {
+            return false;
+        }
+
+        if (position.Line == range.End.Line && position.Character > range.End.Character)
+        {
+            return false;
+        }
+
+        return true;
     }
 }
