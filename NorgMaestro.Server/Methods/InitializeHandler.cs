@@ -48,6 +48,7 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
                 HoverProvider = true,
                 DefinitionProvider = true,
                 DocumentSymbolProvider = true,
+                DocumentLinkProvider = new() { ResolveProvider = false },
             },
         };
 

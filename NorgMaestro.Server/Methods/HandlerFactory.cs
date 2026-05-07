@@ -25,6 +25,7 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
             MethodType.WorkspaceSymbols => new WorkspaceSymbolHandler(_state, req),
             MethodType.Definition => new DefinitionHandler(_state, req),
             MethodType.DocumentSymbol => new DocumentSymbolHandler(_state, req),
+            MethodType.DocumentLink => new DocumentLinkHandler(_state, req),
             _ => new CantHandler(_writer, req),
         };
 
@@ -57,6 +58,7 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
         public const string Hover = "textDocument/hover";
         public const string Definition = "textDocument/definition";
         public const string DocumentSymbol = "textDocument/documentSymbol";
+        public const string DocumentLink = "textDocument/documentLink";
         public const string Shutdown = "shutdown";
         public const string Exit = "exit";
     }

@@ -21,7 +21,18 @@ public record MetaField
     public required TextRange Range { get; init; }
 }
 
-internal static partial class NorgParser
+internal interface INorgParser
+{
+    public static abstract async Task<NeorgMetadata> GetMetadata(Uri fileUri);
+    public static abstract Dictionary<Uri, HashSet<ReferenceLocation>> GetReferences(
+        Uri fileUri,
+        string[] content
+    );
+    public static abstract NorgLink? ParseLink(Uri fileUri, Position position, string line);
+    public static abstract NorgLink[] ParseLinks(Uri fileUri, string[] content);
+}
+
+internal partial class NorgParser : INorgParser
 {
     public static async Task<NeorgMetadata> GetMetadata(Uri fileUri)
     {
@@ -257,27 +268,32 @@ internal static partial class NorgParser
         // - `:$/path/from/current/workspace:` relative to current workspace root
         // - `:$gtd/path/in/gtd/workspace:` relative to the root of the workspace called `gtd`.
         Dictionary<Uri, HashSet<ReferenceLocation>> references = [];
-        uint lineNumber = 0;
-        foreach (string line in content)
+        foreach (NorgLink link in ParseLinks(fileUri, content))
         {
-            NorgLink[] norgLinks = ParseLinks(fileUri, lineNumber, line);
-            foreach (NorgLink link in norgLinks)
+            string line = content[(int)link.AbsoluteRange.Start.Line];
+            ReferenceLocation refLocation = new()
             {
-                ReferenceLocation refLocation = new()
-                {
-                    Line = line,
-                    Location = new() { Uri = fileUri.AbsoluteUri, Range = link.AbsoluteRange },
-                };
-                references[link.GetFileLinkUri()] = references.TryGetValue(
-                    link.GetFileLinkUri(),
-                    out HashSet<ReferenceLocation>? value
-                )
-                    ? ([.. value, refLocation])
-                    : ([refLocation]);
-            }
-            lineNumber++;
+                Line = line,
+                Location = new() { Uri = fileUri.AbsoluteUri, Range = link.AbsoluteRange },
+            };
+            references[link.GetFileLinkUri()] = references.TryGetValue(
+                link.GetFileLinkUri(),
+                out HashSet<ReferenceLocation>? value
+            )
+                ? ([.. value, refLocation])
+                : ([refLocation]);
         }
         return references;
+    }
+
+    public static NorgLink[] ParseLinks(Uri fileUri, string[] content)
+    {
+        List<NorgLink> links = [];
+        for (int i = 0; i < content.Length; i++)
+        {
+            links.AddRange(ParseLinks(fileUri, (uint)i, content[i]));
+        }
+        return [.. links];
     }
 
     private static NorgLink[] ParseLinks(Uri fileUri, uint lineNr, string line)
