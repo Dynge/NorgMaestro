@@ -19,6 +19,7 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
             MethodType.Completion => new CompletionHandler(_state, req),
             MethodType.Hover => new HoverHandler(_state, req),
             MethodType.Rename => new RenameHandler(_state, req),
+            MethodType.PrepareRename => new PrepareRenameHandler(req),
             MethodType.PrepareCallHierarchy => new PrepareCallHierarchyHandler(_state, req),
             MethodType.IncomingCalls => new IncomingCallsHandler(_state, req),
             MethodType.References => new ReferencesHandler(_state, req),
@@ -50,6 +51,7 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
         public const string Initialized = "initialized";
         public const string Completion = "textDocument/completion";
         public const string Rename = "textDocument/rename";
+        public const string PrepareRename = "textDocument/prepareRename";
         public const string WorkspaceSymbols = "workspace/symbol";
         public const string References = "textDocument/references";
         public const string IncomingCalls = "callHierarchy/incomingCalls";

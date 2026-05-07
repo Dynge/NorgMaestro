@@ -44,7 +44,7 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
                 WorkspaceSymbolProvider = true,
                 ReferencesProvider = true,
                 CallHierarchyProvider = true,
-                RenameProvider = true,
+                RenameProvider = new() { PrepareProvider = true },
                 HoverProvider = true,
                 DefinitionProvider = true,
                 DocumentSymbolProvider = true,

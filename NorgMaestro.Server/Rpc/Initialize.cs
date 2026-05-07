@@ -76,7 +76,7 @@ public readonly record struct ServerCapabilities
     public bool? HoverProvider { get; init; }
 
     [JsonPropertyName("renameProvider")]
-    public bool? RenameProvider { get; init; }
+    public RenameOptions? RenameProvider { get; init; }
 
     [JsonPropertyName("definitionProvider")]
     public bool? DefinitionProvider { get; init; }
