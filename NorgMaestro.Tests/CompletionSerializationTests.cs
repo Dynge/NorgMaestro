@@ -11,7 +11,7 @@ public sealed class CompletionSerializationTests
     {
         CompletionItem item = new() { Label = "Category" };
 
-        JsonElement result = JsonSerializer.SerializeToElement(item);
+        JsonElement result = JsonSerializer.SerializeToElement(item, JsonOptions.Default);
         result.TryGetProperty("textEdit", out _).Should().BeFalse();
     }
 
@@ -33,7 +33,7 @@ public sealed class CompletionSerializationTests
             }
         };
 
-        JsonElement result = JsonSerializer.SerializeToElement(item);
+        JsonElement result = JsonSerializer.SerializeToElement(item, JsonOptions.Default);
         result.TryGetProperty("textEdit", out JsonElement textEdit).Should().BeTrue();
         textEdit.ValueKind.Should().Be(JsonValueKind.Object);
     }

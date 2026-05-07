@@ -25,7 +25,7 @@ public sealed class RpcWriterTests
         List<CompletionItem> itemToEncode = [new() { Label = "Hello" }];
         await _writer.EncodeAndWrite(itemToEncode);
 
-        var itemToEncodeAsJson = JsonSerializer.Serialize(itemToEncode);
+        var itemToEncodeAsJson = JsonSerializer.Serialize(itemToEncode, JsonOptions.Default);
         ReadDataFromStream()
             .Should()
             .MatchRegex($"Content-Length: \\d+\\r\\n\\r\\n{Regex.Escape(itemToEncodeAsJson)}");
@@ -47,7 +47,7 @@ public sealed class RpcWriterTests
         _writer.EncodeAndWrite(itemToEncode);
 
         string written = ReadDataFromStream();
-        string body = JsonSerializer.Serialize(itemToEncode);
+        string body = JsonSerializer.Serialize(itemToEncode, JsonOptions.Default);
         int expectedByteLength = Encoding.UTF8.GetByteCount(body);
 
         Match match = Regex.Match(written, @"Content-Length:\s*(\d+)");
