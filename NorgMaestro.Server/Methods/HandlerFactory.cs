@@ -19,7 +19,7 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
             MethodType.Completion => new CompletionHandler(_state, req),
             MethodType.Hover => new HoverHandler(_state, req),
             MethodType.Rename => new RenameHandler(_state, req),
-            MethodType.PrepareRename => new PrepareRenameHandler(req),
+            MethodType.PrepareRename => new PrepareRenameHandler(_state, req),
             MethodType.PrepareCallHierarchy => new PrepareCallHierarchyHandler(_state, req),
             MethodType.IncomingCalls => new IncomingCallsHandler(_state, req),
             MethodType.References => new ReferencesHandler(_state, req),

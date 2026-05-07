@@ -29,12 +29,20 @@ public class DefinitionHandler(LanguageServerState state, RpcMessage request) : 
             line
         );
 
-        if (link is null)
+        Uri targetUri;
+        if (link is not null)
+        {
+            targetUri = _state.ResolveLinkUri(link);
+        }
+        else if (_state.TryGetTitleTarget(definitionRequest.Params.TextDocument.Uri, definitionRequest.Params.Position, out Uri titleTarget))
+        {
+            targetUri = titleTarget;
+        }
+        else
         {
             return Response.OfSuccess(definitionRequest.Id);
         }
 
-        Uri targetUri = _state.ResolveLinkUri(link);
         if (_state.Documents.TryGetValue(targetUri, out Document? doc) is false)
         {
             return Response.OfSuccess(definitionRequest.Id);

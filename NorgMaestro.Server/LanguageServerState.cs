@@ -152,6 +152,49 @@ public class LanguageServerState
         return ToNorgUri(Path.Join(parent, filePath));
     }
 
+    internal bool TryGetTitleTarget(Uri sourceUri, Position position, out Uri targetUri)
+    {
+        targetUri = sourceUri;
+        if (_documents.TryGetValue(sourceUri, out Document? doc) is false)
+        {
+            return false;
+        }
+
+        MetaField? title = doc.Metadata.Title;
+        if (title is null)
+        {
+            return false;
+        }
+
+        if (IsWithinRange(position, title.Range) is false)
+        {
+            return false;
+        }
+
+        targetUri = sourceUri;
+        return true;
+    }
+
+    private static bool IsWithinRange(Position position, TextRange range)
+    {
+        if (position.Line < range.Start.Line || position.Line > range.End.Line)
+        {
+            return false;
+        }
+
+        if (position.Line == range.Start.Line && position.Character < range.Start.Character)
+        {
+            return false;
+        }
+
+        if (position.Line == range.End.Line && position.Character > range.End.Character)
+        {
+            return false;
+        }
+
+        return true;
+    }
+
     private static Uri ToNorgUri(string path)
     {
         string norgPath = path.EndsWith(".norg") ? path : path + ".norg";

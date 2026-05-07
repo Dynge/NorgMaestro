@@ -177,4 +177,48 @@ public sealed class DefinitionHandlerTests
             Directory.Delete(gtdDir, true);
         }
     }
+
+    [Fact]
+    public void ShouldReturnSelfDefinitionWhenCursorOnTitleMetadata()
+    {
+        string tempDir = Directory.CreateTempSubdirectory("norgmaestro-definition-title").FullName;
+        try
+        {
+            string sourcePath = Path.Combine(tempDir, "202601010401.norg");
+            File.WriteAllText(sourcePath, "@document.meta\ntitle: My Title\n@end\n");
+
+            Uri sourceUri = new(Path.GetFullPath(sourcePath));
+            LanguageServerState state = new();
+            state.UpdateDocument(sourceUri);
+
+            RpcMessage request = new()
+            {
+                Id = 45,
+                JsonRpc = "2.0",
+                Method = "textDocument/definition",
+                Params = JsonSerializer.SerializeToElement(
+                    new
+                    {
+                        textDocument = new { uri = sourceUri.AbsoluteUri },
+                        position = new { line = 1, character = 9 }
+                    }
+                )
+            };
+
+            DefinitionHandler handler = new(state, request);
+            Response? response = handler.HandleRequest();
+            JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
+            Location[]? locations = result.Deserialize<Location[]>();
+
+            locations.Should().NotBeNull();
+            locations!.Should().ContainSingle();
+            Location location = locations[0] ?? throw new Xunit.Sdk.XunitException("Missing location");
+            location.Uri.Should().Be(sourceUri.AbsoluteUri);
+            location.Range.Start.Line.Should().Be(1);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
 }

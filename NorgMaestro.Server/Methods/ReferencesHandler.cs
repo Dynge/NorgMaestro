@@ -29,29 +29,44 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
             line
         );
 
-        if (link is null)
+        Uri targetUri;
+        if (link is not null)
+        {
+            targetUri = _state.ResolveLinkUri(link);
+        }
+        else if (
+            _state.TryGetTitleTarget(
+                referenceRequest.Params.TextDocument.Uri,
+                referenceRequest.Params.Position,
+                out Uri titleTarget
+            )
+        )
+        {
+            targetUri = titleTarget;
+        }
+        else
         {
             return Task.FromResult<Response?>(Response.OfSuccess(referenceRequest.Id));
         }
 
-        Uri targetUri = _state.ResolveLinkUri(link);
         HashSet<Location> references = _state
             .References.GetValueOrDefault(targetUri, [])
             .Select(reference => reference.Location)
             .ToHashSet();
         if (referenceRequest.Params.Context.IncludeDeclaration)
         {
-            _ = references.Add(
-                new()
-                {
-                    Uri = targetUri.AbsoluteUri,
-                    Range = new()
-                    {
-                        Start = new() { Line = 0, Character = 0 },
-                        End = new() { Line = 0, Character = 0 },
-                    },
-                }
-            );
+            var defaultRange = new TextRange()
+            {
+                Start = new() { Line = 0, Character = 0 },
+                End = new() { Line = 0, Character = 0 },
+            };
+            TextRange declarationRange = _state.Documents.TryGetValue(
+                targetUri,
+                out Document? targetDoc
+            )
+                ? targetDoc.Metadata.Title?.Range ?? defaultRange
+                : defaultRange;
+            _ = references.Add(new() { Uri = targetUri.AbsoluteUri, Range = declarationRange });
         }
 
         return (references.Count > 0) switch

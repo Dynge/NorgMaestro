@@ -24,12 +24,20 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
             line
         );
 
-        if (link is null)
+        Uri targetUri;
+        if (link is not null)
+        {
+            targetUri = _state.ResolveLinkUri(link);
+        }
+        else if (_state.TryGetTitleTarget(renameRequest.Params.TextDocument.Uri, renameRequest.Params.Position, out Uri titleTarget))
+        {
+            targetUri = titleTarget;
+        }
+        else
         {
             return Task.FromResult<Response?>(Response.OfSuccess(renameRequest.Id));
         }
 
-        Uri targetUri = _state.ResolveLinkUri(link);
         Document cursorDocument = _state.Documents[targetUri];
         List<TextEdit> changeInCursor = cursorDocument.Metadata.Title switch
         {
@@ -41,7 +49,7 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
         };
 
         Dictionary<string, TextEdit[]> changeInRefs = _state
-            .References[targetUri]
+            .References.GetValueOrDefault(targetUri, [])
             .ToLookup(reference => reference.Location.Uri)
             .ToDictionary(
                 kvp => kvp.Key,
