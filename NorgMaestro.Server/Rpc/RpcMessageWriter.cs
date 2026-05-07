@@ -54,14 +54,15 @@ public class RpcMessageReader(Stream read) : IRpcReader
 
 public class RpcMessageWriter(Stream write) : IRpcWriter
 {
-    private StreamWriter Writer { get; init; } = new(write, Encoding.UTF8);
+    private StreamWriter Writer { get; init; } = new(write, new UTF8Encoding(false));
 
     private const string ContentLengthHeader = "Content-Length: ";
 
     public async Task EncodeAndWrite(object o)
     {
-        string body = Encoding.UTF8.GetString(JsonSerializer.SerializeToUtf8Bytes(o));
-        await Writer.WriteAsync(string.Concat(ContentLengthHeader, body.Length, "\r\n\r\n", body));
+        byte[] bodyBytes = JsonSerializer.SerializeToUtf8Bytes(o);
+        string body = Encoding.UTF8.GetString(bodyBytes);
+        await Writer.WriteAsync(string.Concat(ContentLengthHeader, bodyBytes.Length, "\r\n\r\n", body));
         await Writer.FlushAsync();
     }
 }

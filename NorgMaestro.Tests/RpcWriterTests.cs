@@ -31,6 +31,30 @@ public sealed class RpcWriterTests
             .MatchRegex($"Content-Length: \\d+\\r\\n\\r\\n{Regex.Escape(itemToEncodeAsJson)}");
     }
 
+    [Fact]
+    public void ShouldNotWriteUtf8BomBeforeHeader()
+    {
+        List<CompletionItem> itemToEncode = [new() { Label = "Hello" }];
+        _writer.EncodeAndWrite(itemToEncode);
+
+        ReadDataFromStream().Should().StartWith("Content-Length: ");
+    }
+
+    [Fact]
+    public void ShouldUseUtf8ByteLengthForContentLength()
+    {
+        List<CompletionItem> itemToEncode = [new() { Label = "cafe" }, new() { Label = "café" }];
+        _writer.EncodeAndWrite(itemToEncode);
+
+        string written = ReadDataFromStream();
+        string body = JsonSerializer.Serialize(itemToEncode);
+        int expectedByteLength = Encoding.UTF8.GetByteCount(body);
+
+        Match match = Regex.Match(written, @"Content-Length:\s*(\d+)");
+        match.Success.Should().BeTrue();
+        int.Parse(match.Groups[1].Value).Should().Be(expectedByteLength);
+    }
+
     private string ReadDataFromStream()
     {
         _outputStream.Position = 0;

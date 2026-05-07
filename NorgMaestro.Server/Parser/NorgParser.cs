@@ -125,21 +125,24 @@ internal static partial class NorgParser
                             matchEnd++;
                         }
 
-                        line = line[(int)matchEnd..];
+                        string firstCategoryLine = line[(int)matchEnd..];
                         uint categoryStart = matchEnd;
-                        uint categoryEnd = (uint)line.Length;
+                        uint categoryEnd = categoryStart + (uint)line.Length;
 
-                        categories.Add(
-                            new()
-                            {
-                                Name = line,
-                                Range = new()
+                        if (firstCategoryLine.Trim().Length is not 0)
+                        {
+                            categories.Add(
+                                new()
                                 {
-                                    Start = new() { Line = lineNr, Character = categoryStart },
-                                    End = new() { Line = lineNr, Character = categoryEnd },
-                                },
-                            }
-                        );
+                                    Name = firstCategoryLine,
+                                    Range = new()
+                                    {
+                                        Start = new() { Line = lineNr, Character = categoryStart },
+                                        End = new() { Line = lineNr, Character = categoryEnd },
+                                    },
+                                }
+                            );
+                        }
                         line = await streamReader.ReadLineAsync();
                         lineNr++;
 
