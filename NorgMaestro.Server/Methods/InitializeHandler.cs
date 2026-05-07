@@ -30,7 +30,7 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
                 $"Found no root folder in init params: {initRequest.Params}"
             );
         }
-        await _state.Initialize(rootUri);
+        await _state.Initialize(rootUri, initRequest.Params.WorkspaceFolders);
         PublishDiagnostics();
         InitializeResultParams res = new()
         {

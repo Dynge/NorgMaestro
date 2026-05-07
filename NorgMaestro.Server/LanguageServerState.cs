@@ -8,15 +8,22 @@ public class LanguageServerState
 {
     private readonly Dictionary<Uri, Document> _documents = [];
     private readonly Dictionary<Uri, HashSet<ReferenceLocation>> _references = [];
+    private readonly Dictionary<string, Uri> _workspaces = [];
     private Uri? _workspaceRoot;
 
     public ReadOnlyDictionary<Uri, Document> Documents => _documents.AsReadOnly();
     public ReadOnlyDictionary<Uri, HashSet<ReferenceLocation>> References =>
         _references.AsReadOnly();
 
-    public async Task Initialize(Uri rootUri)
+    public async Task Initialize(Uri rootUri, IEnumerable<WorkspaceFolder>? workspaceFolders = null)
     {
         _workspaceRoot = rootUri;
+        _workspaces.Clear();
+        foreach (WorkspaceFolder workspace in workspaceFolders ?? [])
+        {
+            _workspaces[workspace.Name] = workspace.Uri;
+        }
+
         foreach (
             string note in Directory.GetFiles(
                 rootUri.LocalPath,
@@ -114,6 +121,20 @@ public class LanguageServerState
                 return ToNorgUri(Path.Join(Directory.GetParent(link.NorgFile.AbsolutePath)!.FullName, filePath[2..]));
             }
             return ToNorgUri(Path.Join(_workspaceRoot.LocalPath, filePath[2..]));
+        }
+
+        if (filePath.StartsWith('$'))
+        {
+            int slashIndex = filePath.IndexOf('/');
+            if (slashIndex > 1)
+            {
+                string workspaceName = filePath[1..slashIndex];
+                string workspaceRelativePath = filePath[(slashIndex + 1)..];
+                if (_workspaces.TryGetValue(workspaceName, out Uri? workspaceUri))
+                {
+                    return ToNorgUri(Path.Join(workspaceUri.LocalPath, workspaceRelativePath));
+                }
+            }
         }
 
         if (filePath.StartsWith("~/"))

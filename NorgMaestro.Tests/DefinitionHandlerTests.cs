@@ -119,4 +119,62 @@ public sealed class DefinitionHandlerTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public void ShouldResolveNamedWorkspaceLinks()
+    {
+        string rootDir = Directory.CreateTempSubdirectory("norgmaestro-root").FullName;
+        string gtdDir = Directory.CreateTempSubdirectory("norgmaestro-gtd").FullName;
+        try
+        {
+            string sourcePath = Path.Combine(rootDir, "202601010301.norg");
+            string targetPath = Path.Combine(gtdDir, "202601010302.norg");
+
+            File.WriteAllText(targetPath, "@document.meta\ntitle: Gtd Target\n@end\n");
+            File.WriteAllText(sourcePath, "@document.meta\ntitle: Source\n@end\n\nSee {:$gtd/202601010302:}[Gtd Target]");
+
+            Uri rootUri = new(Path.GetFullPath(rootDir));
+            Uri sourceUri = new(Path.GetFullPath(sourcePath));
+
+            LanguageServerState state = new();
+            state.Initialize(
+                rootUri,
+                [
+                    new WorkspaceFolder() { Name = "main", Uri = rootUri },
+                    new WorkspaceFolder() { Name = "gtd", Uri = new Uri(Path.GetFullPath(gtdDir)) }
+                ]
+            );
+            state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
+
+            RpcMessage request = new()
+            {
+                Id = 44,
+                JsonRpc = "2.0",
+                Method = "textDocument/definition",
+                Params = JsonSerializer.SerializeToElement(
+                    new
+                    {
+                        textDocument = new { uri = sourceUri.AbsoluteUri },
+                        position = new { line = 4, character = 10 }
+                    }
+                )
+            };
+
+            DefinitionHandler handler = new(state, request);
+            Response? response = handler.HandleRequest();
+
+            response.Should().NotBeNull();
+            JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
+            Location[]? locations = result.Deserialize<Location[]>();
+            locations.Should().NotBeNull();
+            locations!.Should().ContainSingle();
+            Location location = locations[0] ?? throw new Xunit.Sdk.XunitException("Missing location");
+            location.Uri.Should().Contain("202601010302.norg");
+        }
+        finally
+        {
+            Directory.Delete(rootDir, true);
+            Directory.Delete(gtdDir, true);
+        }
+    }
 }
