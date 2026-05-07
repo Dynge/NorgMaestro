@@ -22,7 +22,12 @@ public record Response : Message
 
     public static Response OfSuccess(int id)
     {
-        return new() { JsonRpc = "2.0", Id = id };
+        return new()
+        {
+            JsonRpc = "2.0",
+            Id = id,
+            Result = JsonSerializer.SerializeToElement<object?>(null, JsonOptions.Default)
+        };
     }
 
     public static Response OfSuccess(int id, object res)

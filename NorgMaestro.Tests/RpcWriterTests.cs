@@ -66,6 +66,17 @@ public sealed class RpcWriterTests
         written.Should().NotContain("textEdit");
     }
 
+    [Fact]
+    public void ShouldIncludeNullResultForSuccessWithoutPayload()
+    {
+        Response response = Response.OfSuccess(46);
+        _writer.EncodeAndWrite(response);
+
+        string written = ReadDataFromStream();
+        written.Should().Contain("\"id\":46");
+        written.Should().Contain("\"result\":null");
+    }
+
     private string ReadDataFromStream()
     {
         _outputStream.Position = 0;
