@@ -40,12 +40,12 @@ public class DefinitionHandler(LanguageServerState state, RpcMessage request) : 
         }
         else
         {
-            return Response.OfSuccess(definitionRequest.Id);
+            return Response.OfSuccess(definitionRequest.Id, Array.Empty<Location>());
         }
 
         if (_state.Documents.TryGetValue(targetUri, out Document? doc) is false)
         {
-            return Response.OfSuccess(definitionRequest.Id);
+            return Response.OfSuccess(definitionRequest.Id, Array.Empty<Location>());
         }
 
         TextRange targetRange = doc.Metadata.Title?.Range

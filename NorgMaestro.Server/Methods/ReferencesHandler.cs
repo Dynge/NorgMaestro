@@ -46,7 +46,7 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
         }
         else
         {
-            return Task.FromResult<Response?>(Response.OfSuccess(referenceRequest.Id));
+            return Task.FromResult<Response?>(Response.OfSuccess(referenceRequest.Id), []);
         }
 
         HashSet<Location> references = _state
@@ -69,10 +69,6 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
             _ = references.Add(new() { Uri = targetUri.AbsoluteUri, Range = declarationRange });
         }
 
-        return (references.Count > 0) switch
-        {
-            true => Task.FromResult<Response?>(Response.OfSuccess(referenceRequest.Id, references)),
-            false => Task.FromResult<Response?>(Response.OfSuccess(referenceRequest.Id)),
-        };
+        return Response.OfSuccess(referenceRequest.Id, references.ToArray());
     }
 }

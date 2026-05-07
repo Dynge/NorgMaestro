@@ -56,4 +56,46 @@ public sealed class ReferencesHandlerTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public void ShouldReturnEmptyArrayWhenNoReferenceTargetFound()
+    {
+        string tempDir = Directory.CreateTempSubdirectory("norgmaestro-references-empty").FullName;
+        try
+        {
+            string sourcePath = Path.Combine(tempDir, "202601060103.norg");
+            File.WriteAllText(sourcePath, "plain text without links\n");
+
+            Uri sourceUri = new(Path.GetFullPath(sourcePath));
+            LanguageServerState state = new();
+            state.UpdateDocument(sourceUri);
+
+            RpcMessage request = new()
+            {
+                Id = 95,
+                JsonRpc = "2.0",
+                Method = "textDocument/references",
+                Params = JsonSerializer.SerializeToElement(
+                    new
+                    {
+                        textDocument = new { uri = sourceUri.AbsoluteUri },
+                        position = new { line = 0, character = 2 },
+                        context = new { includeDeclaration = false }
+                    }
+                )
+            };
+
+            ReferencesHandler handler = new(state, request);
+            Response? response = handler.HandleRequest();
+            JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
+            Location[]? locations = result.Deserialize<Location[]>();
+
+            locations.Should().NotBeNull();
+            locations.Should().BeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
 }

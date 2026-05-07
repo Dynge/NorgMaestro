@@ -221,4 +221,45 @@ public sealed class DefinitionHandlerTests
             Directory.Delete(tempDir, true);
         }
     }
+
+    [Fact]
+    public void ShouldReturnEmptyArrayWhenNoDefinitionTargetFound()
+    {
+        string tempDir = Directory.CreateTempSubdirectory("norgmaestro-definition-empty").FullName;
+        try
+        {
+            string sourcePath = Path.Combine(tempDir, "202601010501.norg");
+            File.WriteAllText(sourcePath, "plain text without links\n");
+
+            Uri sourceUri = new(Path.GetFullPath(sourcePath));
+            LanguageServerState state = new();
+            state.UpdateDocument(sourceUri);
+
+            RpcMessage request = new()
+            {
+                Id = 46,
+                JsonRpc = "2.0",
+                Method = "textDocument/definition",
+                Params = JsonSerializer.SerializeToElement(
+                    new
+                    {
+                        textDocument = new { uri = sourceUri.AbsoluteUri },
+                        position = new { line = 0, character = 2 }
+                    }
+                )
+            };
+
+            DefinitionHandler handler = new(state, request);
+            Response? response = handler.HandleRequest();
+            JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
+            Location[]? locations = result.Deserialize<Location[]>();
+
+            locations.Should().NotBeNull();
+            locations.Should().BeEmpty();
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
 }
