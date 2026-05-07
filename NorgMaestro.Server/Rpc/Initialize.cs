@@ -77,6 +77,9 @@ public readonly record struct ServerCapabilities
 
     [JsonPropertyName("renameProvider")]
     public bool? RenameProvider { get; init; }
+
+    [JsonPropertyName("definitionProvider")]
+    public bool? DefinitionProvider { get; init; }
 }
 
 public readonly record struct InitializeResultParams

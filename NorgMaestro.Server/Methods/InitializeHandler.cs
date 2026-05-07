@@ -43,6 +43,7 @@ public class InitializeHandler(LanguageServerState state, RpcMessage request) : 
                 CallHierarchyProvider = true,
                 RenameProvider = true,
                 HoverProvider = true,
+                DefinitionProvider = true,
             },
         };
 
