@@ -28,6 +28,8 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
             MethodType.Definition => new DefinitionHandler(_state, req),
             MethodType.DocumentSymbol => new DocumentSymbolHandler(_state, req),
             MethodType.DocumentLink => new DocumentLinkHandler(_state, req),
+            MethodType.CodeAction => new CodeActionHandler(req),
+            MethodType.ExecuteCommand => new ExecuteCommandHandler(_state, _writer, req),
             _ => new CantHandler(_writer, req),
         };
 
@@ -63,6 +65,8 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
         public const string Definition = "textDocument/definition";
         public const string DocumentSymbol = "textDocument/documentSymbol";
         public const string DocumentLink = "textDocument/documentLink";
+        public const string CodeAction = "textDocument/codeAction";
+        public const string ExecuteCommand = "workspace/executeCommand";
         public const string Shutdown = "shutdown";
         public const string Exit = "exit";
     }

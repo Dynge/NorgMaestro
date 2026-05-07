@@ -49,6 +49,8 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
                 DefinitionProvider = true,
                 DocumentSymbolProvider = true,
                 DocumentLinkProvider = new() { ResolveProvider = false },
+                CodeActionProvider = new() { CodeActionKinds = [CodeActionKind.QuickFix] },
+                ExecuteCommandProvider = new() { Commands = [CodeActionHandler.CreateNoteCommand] },
             },
         };
 

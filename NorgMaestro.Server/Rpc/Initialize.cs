@@ -86,6 +86,12 @@ public readonly record struct ServerCapabilities
 
     [JsonPropertyName("documentLinkProvider")]
     public DocumentLinkOptions? DocumentLinkProvider { get; init; }
+
+    [JsonPropertyName("codeActionProvider")]
+    public CodeActionOptions? CodeActionProvider { get; init; }
+
+    [JsonPropertyName("executeCommandProvider")]
+    public ExecuteCommandOptions? ExecuteCommandProvider { get; init; }
 }
 
 public readonly record struct InitializeResultParams
