@@ -56,8 +56,7 @@ public sealed class DefinitionHandlerTests
             JsonElement result = response.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             Location[]? locations = result.Deserialize<Location[]>();
             locations.Should().NotBeNull();
-            locations!.Should().ContainSingle();
-            Location location = locations[0] ?? throw new Xunit.Sdk.XunitException("Missing location");
+            Location location = locations!.Should().ContainSingle().Subject;
             location.Uri.Should().Be(targetUri.AbsoluteUri);
             location.Range.Start.Line.Should().Be(1);
         }
@@ -110,8 +109,7 @@ public sealed class DefinitionHandlerTests
             Location[]? locations = result.Deserialize<Location[]>();
 
             locations.Should().NotBeNull();
-            locations!.Should().ContainSingle();
-            Location location = locations[0] ?? throw new Xunit.Sdk.XunitException("Missing location");
+            Location location = locations!.Should().ContainSingle().Subject;
             location.Uri.Should().Contain("202601010201.norg");
         }
         finally
@@ -167,8 +165,7 @@ public sealed class DefinitionHandlerTests
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             Location[]? locations = result.Deserialize<Location[]>();
             locations.Should().NotBeNull();
-            locations!.Should().ContainSingle();
-            Location location = locations[0] ?? throw new Xunit.Sdk.XunitException("Missing location");
+            Location location = locations!.Should().ContainSingle().Subject;
             location.Uri.Should().Contain("202601010302.norg");
         }
         finally
@@ -211,8 +208,7 @@ public sealed class DefinitionHandlerTests
             Location[]? locations = result.Deserialize<Location[]>();
 
             locations.Should().NotBeNull();
-            locations!.Should().ContainSingle();
-            Location location = locations[0] ?? throw new Xunit.Sdk.XunitException("Missing location");
+            Location location = locations!.Should().ContainSingle().Subject;
             location.Uri.Should().Be(sourceUri.AbsoluteUri);
             location.Range.Start.Line.Should().Be(1);
         }

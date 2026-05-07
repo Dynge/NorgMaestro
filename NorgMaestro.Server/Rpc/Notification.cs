@@ -48,6 +48,15 @@ public record NotificationParams
     public MessageType Type { get; init; } = MessageType.Log;
 }
 
+public record ShowDocumentParams
+{
+    [JsonPropertyName("uri")]
+    public required string Uri { get; init; }
+
+    [JsonPropertyName("takeFocus")]
+    public bool TakeFocus { get; init; }
+}
+
 public enum MessageType
 {
     /**

@@ -1,5 +1,6 @@
 using System.Text.Json;
 using FluentAssertions;
+using NorgMaestro.Server;
 using NorgMaestro.Server.Methods;
 using NorgMaestro.Server.Rpc;
 
@@ -45,13 +46,18 @@ public sealed class CodeActionHandlerTests
             )
         };
 
-        CodeActionHandler handler = new(request);
+        CodeActionHandler handler = new(new LanguageServerState(), request);
         Response? response = handler.HandleRequest();
         JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
         CodeAction[]? actions = result.Deserialize<CodeAction[]>();
 
         actions.Should().NotBeNull();
-        actions!.Should().ContainSingle();
-        actions[0]!.Command!.Command.Should().Be(CodeActionHandler.CreateNoteCommand);
+        CodeAction[] actionList = actions ?? throw new Xunit.Sdk.XunitException("Missing actions payload");
+        actionList.Should().NotBeEmpty();
+        CodeAction action = actionList
+            .FirstOrDefault(a => a.Command?.Command == CodeActionHandler.CreateNoteCommand)
+            ?? throw new Xunit.Sdk.XunitException("Missing create-note command action");
+        action.Command.Should().NotBeNull();
+        action.Command!.Command.Should().Be(CodeActionHandler.CreateNoteCommand);
     }
 }

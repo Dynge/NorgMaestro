@@ -40,11 +40,14 @@ public sealed class DocumentSymbolHandlerTests
             DocumentSymbol[]? symbols = result.Deserialize<DocumentSymbol[]>();
 
             symbols.Should().NotBeNull();
-            symbols!.Should().HaveCount(2);
-            symbols[0]!.Name.Should().Be("Root");
-            symbols[1]!.Name.Should().Be("Child");
-            symbols[0]!.Children.Should().NotBeNull();
-            symbols[0]!.Children.Should().BeEmpty();
+            DocumentSymbol[] symbolList = symbols ?? throw new Xunit.Sdk.XunitException("Missing symbols payload");
+            symbolList.Should().HaveCount(2);
+            DocumentSymbol root = symbolList[0] ?? throw new Xunit.Sdk.XunitException("Missing root symbol");
+            DocumentSymbol child = symbolList[1] ?? throw new Xunit.Sdk.XunitException("Missing child symbol");
+            root.Name.Should().Be("Root");
+            child.Name.Should().Be("Child");
+            root.Children.Should().NotBeNull();
+            root.Children.Should().BeEmpty();
         }
         finally
         {

@@ -14,6 +14,8 @@ public class LanguageServerState
     public ReadOnlyDictionary<Uri, Document> Documents => _documents.AsReadOnly();
     public ReadOnlyDictionary<Uri, HashSet<ReferenceLocation>> References =>
         _references.AsReadOnly();
+    public ReadOnlyDictionary<string, Uri> Workspaces => _workspaces.AsReadOnly();
+    public Uri? WorkspaceRoot => _workspaceRoot;
 
     public async Task Initialize(Uri rootUri, IEnumerable<WorkspaceFolder>? workspaceFolders = null)
     {

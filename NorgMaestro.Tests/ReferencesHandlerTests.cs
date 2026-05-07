@@ -47,9 +47,10 @@ public sealed class ReferencesHandlerTests
             Location[]? locations = result.Deserialize<Location[]>();
 
             locations.Should().NotBeNull();
-            locations!.Should().HaveCount(2);
-            locations.Select(a => a.Uri).Should().Contain(sourceUri.AbsoluteUri);
-            locations.Select(a => a.Uri).Should().Contain(targetUri.AbsoluteUri);
+            Location[] refs = locations!;
+            refs.Should().HaveCount(2);
+            refs.Select(a => a.Uri).Should().Contain(sourceUri.AbsoluteUri);
+            refs.Select(a => a.Uri).Should().Contain(targetUri.AbsoluteUri);
         }
         finally
         {

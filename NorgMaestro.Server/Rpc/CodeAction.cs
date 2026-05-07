@@ -51,6 +51,12 @@ public record CodeAction
 
     [JsonPropertyName("command")]
     public RpcCommand? Command { get; init; }
+
+    [JsonPropertyName("edit")]
+    public WorkspaceEdit? Edit { get; init; }
+
+    [JsonPropertyName("isPreferred")]
+    public bool? IsPreferred { get; init; }
 }
 
 public record RpcCommand
@@ -68,6 +74,7 @@ public record RpcCommand
 public record CodeActionKind
 {
     public const string QuickFix = "quickfix";
+    public const string RefactorRewrite = "refactor.rewrite";
 }
 
 public record CodeActionOptions

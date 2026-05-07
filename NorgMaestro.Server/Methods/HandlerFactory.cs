@@ -28,7 +28,7 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
             MethodType.Definition => new DefinitionHandler(_state, req),
             MethodType.DocumentSymbol => new DocumentSymbolHandler(_state, req),
             MethodType.DocumentLink => new DocumentLinkHandler(_state, req),
-            MethodType.CodeAction => new CodeActionHandler(req),
+            MethodType.CodeAction => new CodeActionHandler(_state, req),
             MethodType.ExecuteCommand => new ExecuteCommandHandler(_state, _writer, req),
             _ => new CantHandler(_writer, req),
         };

@@ -50,6 +50,56 @@ public sealed class ExecuteCommandHandlerTests
         }
     }
 
+    [Fact]
+    public void ShouldCreateNoteFromLinkTextAndRewriteLink()
+    {
+        string tempDir = Directory.CreateTempSubdirectory("norgmaestro-linktext").FullName;
+        try
+        {
+            string sourcePath = Path.Combine(tempDir, "202601080200.norg");
+            File.WriteAllText(sourcePath, "{}[Title of A new note]");
+
+            LanguageServerState state = new();
+            state.Initialize(new Uri(Path.GetFullPath(tempDir)));
+            state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
+
+            RpcMessage request = new()
+            {
+                Id = 95,
+                JsonRpc = "2.0",
+                Method = "workspace/executeCommand",
+                Params = JsonSerializer.SerializeToElement(
+                    new
+                    {
+                        command = CodeActionHandler.CreateNoteFromLinkTextCommand,
+                        arguments = new object[]
+                        {
+                            sourcePath,
+                            0,
+                            0,
+                            22,
+                            "Title of A new note"
+                        }
+                    }
+                )
+            };
+
+            BufferingWriter writer = new();
+            ExecuteCommandHandler handler = new(state, writer, request);
+            _ = handler.HandleRequest();
+
+            string rewritten = File.ReadAllText(sourcePath);
+            rewritten.Should().Contain("{:20");
+            rewritten.Should().Contain("[Title of A new note]");
+            Directory.GetFiles(tempDir, "*.norg").Length.Should().BeGreaterThan(1);
+            writer.WriteCount.Should().BeGreaterThan(0);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
     private sealed class BufferingWriter : IRpcWriter
     {
         public int WriteCount { get; private set; }

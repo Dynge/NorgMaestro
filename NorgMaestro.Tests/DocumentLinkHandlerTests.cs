@@ -38,9 +38,12 @@ public sealed class DocumentLinkHandlerTests
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             DocumentLink[]? links = result.Deserialize<DocumentLink[]>();
             links.Should().NotBeNull();
-            links!.Should().HaveCount(2);
-            links[0]!.Tooltip.Should().Be("Second");
-            links[1]!.Tooltip.Should().Be("Third");
+            DocumentLink[] linkList = links ?? throw new Xunit.Sdk.XunitException("Missing links payload");
+            linkList.Should().HaveCount(2);
+            DocumentLink second = linkList[0] ?? throw new Xunit.Sdk.XunitException("Missing first link");
+            DocumentLink third = linkList[1] ?? throw new Xunit.Sdk.XunitException("Missing second link");
+            second.Tooltip.Should().Be("Second");
+            third.Tooltip.Should().Be("Third");
         }
         finally
         {

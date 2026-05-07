@@ -59,8 +59,8 @@ public sealed class OutgoingCallsHandlerTests
             OutgoingCallsResponseParams[]? outgoing = result.Deserialize<OutgoingCallsResponseParams[]>();
 
             outgoing.Should().NotBeNull();
-            outgoing!.Should().ContainSingle();
-            outgoing[0]!.To.Uri.Should().Be(targetUri.AbsoluteUri);
+            OutgoingCallsResponseParams call = outgoing!.Should().ContainSingle().Subject;
+            call.To.Uri.Should().Be(targetUri.AbsoluteUri);
         }
         finally
         {
