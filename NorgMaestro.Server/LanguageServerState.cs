@@ -10,16 +10,30 @@ public class LanguageServerState
     private readonly Dictionary<Uri, HashSet<ReferenceLocation>> _references = [];
     private readonly Dictionary<string, Uri> _workspaces = [];
     private Uri? _workspaceRoot;
+    private DiagnosticSeverity _unresolvedLinkSeverity = DiagnosticSeverity.Warning;
 
     public ReadOnlyDictionary<Uri, Document> Documents => _documents.AsReadOnly();
     public ReadOnlyDictionary<Uri, HashSet<ReferenceLocation>> References =>
         _references.AsReadOnly();
     public ReadOnlyDictionary<string, Uri> Workspaces => _workspaces.AsReadOnly();
     public Uri? WorkspaceRoot => _workspaceRoot;
+    public DiagnosticSeverity UnresolvedLinkSeverity => _unresolvedLinkSeverity;
 
     public async Task Initialize(Uri rootUri, IEnumerable<WorkspaceFolder>? workspaceFolders = null)
     {
+        Initialize(rootUri, workspaceFolders, null);
+    }
+
+    public void Initialize(
+        Uri rootUri,
+        IEnumerable<WorkspaceFolder>? workspaceFolders,
+        InitializationOptions? initializationOptions
+    )
+    {
         _workspaceRoot = rootUri;
+        _unresolvedLinkSeverity = ParseSeverity(
+            initializationOptions?.Diagnostics?.UnresolvedLinkSeverity
+        );
         _workspaces.Clear();
         foreach (WorkspaceFolder workspace in workspaceFolders ?? [])
         {
@@ -100,7 +114,7 @@ public class LanguageServerState
                 diagnostics.Add(
                     new()
                     {
-                        Severity = DiagnosticSeverity.Warning,
+                        Severity = _unresolvedLinkSeverity,
                         Range = location.Location.Range,
                         Message = $"Unresolved note link: {targetUri.AbsolutePath}",
                         Source = "norgmaestro",
@@ -240,6 +254,24 @@ public class LanguageServerState
     {
         string norgPath = path.EndsWith(".norg") ? path : path + ".norg";
         return new Uri(Path.GetFullPath(norgPath));
+    }
+
+    private static DiagnosticSeverity ParseSeverity(string? severity)
+    {
+        if (string.IsNullOrWhiteSpace(severity))
+        {
+            return DiagnosticSeverity.Warning;
+        }
+
+        return severity.Trim().ToLowerInvariant() switch
+        {
+            "error" => DiagnosticSeverity.Error,
+            "warning" => DiagnosticSeverity.Warning,
+            "information" => DiagnosticSeverity.Information,
+            "info" => DiagnosticSeverity.Information,
+            "hint" => DiagnosticSeverity.Hint,
+            _ => DiagnosticSeverity.Warning,
+        };
     }
 
     private Dictionary<Uri, HashSet<ReferenceLocation>> GetReferences(Uri fileUri, string[] content)

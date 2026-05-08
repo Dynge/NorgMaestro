@@ -75,7 +75,7 @@ If `.norg` extension is omitted, NorgMaestro adds it automatically.
 
 ## Configuration values you can supply
 
-NorgMaestro currently uses standard LSP initialize parameters. It does **not** define custom `settings` or custom `initializationOptions` yet.
+NorgMaestro uses standard LSP initialize parameters and supports targeted custom `initializationOptions`.
 
 Supply these in your client initialize payload:
 
@@ -83,6 +83,7 @@ Supply these in your client initialize payload:
 - `workspaceFolders` (`[{ uri, name }]`): optional multi-root folders. Folder `name` is used as workspace alias in `$name/...` links.
 - `processId` (`number | null`): optional LSP process id.
 - `capabilities` (`object`): normal client capability advertisement.
+- `initializationOptions.diagnostics.unresolvedLinkSeverity` (`string`): optional severity for unresolved link diagnostics. Supported values: `error`, `warning`, `information` (`info`), `hint`. Default: `warning`.
 
 ### Example (Neovim lspconfig)
 

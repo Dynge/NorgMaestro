@@ -69,6 +69,45 @@ public sealed class InitializeHandlerTests
         state.WorkspaceRoot!.LocalPath.Should().Be(Path.GetFullPath(AppContext.BaseDirectory));
     }
 
+    [Fact]
+    public void ShouldApplyInitializationOptionsForUnresolvedLinkSeverity()
+    {
+        string tempDir = Directory.CreateTempSubdirectory("norgmaestro-initialize-severity").FullName;
+        try
+        {
+            LanguageServerState state = new();
+            RpcMessage request = new()
+            {
+                JsonRpc = "2.0",
+                Id = 3,
+                Method = HandlerFactory.MethodType.Initialize,
+                Params = JsonSerializer.SerializeToElement(
+                    new
+                    {
+                        capabilities = new { },
+                        rootPath = tempDir,
+                        initializationOptions = new
+                        {
+                            diagnostics = new
+                            {
+                                unresolvedLinkSeverity = "error"
+                            }
+                        }
+                    }
+                )
+            };
+
+            InitializeHandler handler = new(state, new BufferingWriter(), request);
+            _ = handler.HandleRequest();
+
+            state.UnresolvedLinkSeverity.Should().Be(DiagnosticSeverity.Error);
+        }
+        finally
+        {
+            Directory.Delete(tempDir, true);
+        }
+    }
+
     private sealed class BufferingWriter : IRpcWriter
     {
         public void EncodeAndWrite(object o) { }

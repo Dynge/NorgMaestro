@@ -41,6 +41,21 @@ public record InitializeRequestParams
 
     [JsonPropertyName("processId")]
     public int? ProcessId { get; init; }
+
+    [JsonPropertyName("initializationOptions")]
+    public InitializationOptions? InitializationOptions { get; init; }
+}
+
+public record InitializationOptions
+{
+    [JsonPropertyName("diagnostics")]
+    public DiagnosticsInitializationOptions? Diagnostics { get; init; }
+}
+
+public record DiagnosticsInitializationOptions
+{
+    [JsonPropertyName("unresolvedLinkSeverity")]
+    public string? UnresolvedLinkSeverity { get; init; }
 }
 
 public readonly record struct WorkspaceFolder

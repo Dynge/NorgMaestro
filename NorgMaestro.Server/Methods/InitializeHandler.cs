@@ -13,7 +13,11 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
     {
         InitializeRequest initRequest = InitializeRequest.From(_request);
         Uri rootUri = ResolveRootUri(initRequest.Params);
-        await _state.Initialize(rootUri, initRequest.Params.WorkspaceFolders);
+        _state.Initialize(
+            rootUri,
+            initRequest.Params.WorkspaceFolders,
+            initRequest.Params.InitializationOptions
+        );
         PublishDiagnostics();
         InitializeResultParams res = new()
         {
@@ -51,6 +55,7 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
             },
         };
 
+        await Task.CompletedTask;
         return Response.OfSuccess(initRequest.Id, res);
     }
 
