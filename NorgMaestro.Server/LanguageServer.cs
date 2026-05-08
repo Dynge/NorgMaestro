@@ -4,13 +4,12 @@ using NorgMaestro.Server.Rpc;
 namespace NorgMaestro.Server;
 
 internal sealed class NeorgLspServer(
-    IRpcWriter writer,
     IRpcReader reader,
-    LanguageServerState state
+    HandlerFactory handlerFactory
 )
 {
     private readonly IRpcReader _reader = reader;
-    private readonly HandlerFactory _handlerFactory = new(state, writer);
+    private readonly HandlerFactory _handlerFactory = handlerFactory;
 
     public async Task Startup()
     {
