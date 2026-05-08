@@ -39,6 +39,12 @@ public record VersionedTextDocument
 
 public record TextDocumentContentChangeEvent
 {
+    [JsonPropertyName("range")]
+    public TextRange? Range { get; init; }
+
+    [JsonPropertyName("rangeLength")]
+    public uint? RangeLength { get; init; }
+
     [JsonPropertyName("text")]
     public required string Text { get; init; }
 }

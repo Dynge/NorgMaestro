@@ -13,16 +13,49 @@ public class DidChangeHandler(LanguageServerState state, IRpcWriter writer, RpcM
     {
         DidChangeNotification didChangeNotification = DidChangeNotification.From(_request);
         Uri uri = didChangeNotification.Params.TextDocument.Uri;
-        string? nextText = didChangeNotification.Params.ContentChanges.LastOrDefault()?.Text;
-        if (nextText is null)
+        if (_state.Documents.TryGetValue(uri, out Document? document) is false)
         {
             return null;
         }
 
-        string[] content = NormalizeLines(nextText);
+        string contentText = string.Join('\n', document.Content);
+        foreach (TextDocumentContentChangeEvent change in didChangeNotification.Params.ContentChanges)
+        {
+            contentText = ApplyChange(contentText, change);
+        }
+
+        string[] content = NormalizeLines(contentText);
         _ = _state.UpdateDocument(uri, content);
         PublishDiagnostics();
         return null;
+    }
+
+    private static string ApplyChange(string source, TextDocumentContentChangeEvent change)
+    {
+        if (change.Range is null)
+        {
+            return change.Text;
+        }
+
+        int startOffset = GetOffset(source, change.Range.Start);
+        int endOffset = GetOffset(source, change.Range.End);
+        return source[..startOffset] + change.Text + source[endOffset..];
+    }
+
+    private static int GetOffset(string source, Position position)
+    {
+        int offset = 0;
+        uint line = 0;
+        while (line < position.Line && offset < source.Length)
+        {
+            if (source[offset] == '\n')
+            {
+                line++;
+            }
+            offset++;
+        }
+
+        return Math.Min(offset + (int)position.Character, source.Length);
     }
 
     private static string[] NormalizeLines(string text)
