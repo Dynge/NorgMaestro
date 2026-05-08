@@ -40,10 +40,15 @@ public class LanguageServerState
 
     public async Task<Document?> UpdateDocument(Uri fileUri)
     {
+        string[] content = File.ReadAllLines(fileUri.LocalPath);
+        return UpdateDocument(fileUri, content);
+    }
+
+    public async Task<Document?> UpdateDocument(Uri fileUri, string[] content)
+    {
         RemoveReferencesFromDocument(fileUri);
 
-        var metadata = await NorgParser.GetMetadata(fileUri);
-        var content = await File.ReadAllLinesAsync(fileUri.LocalPath);
+        var metadata = await NorgParser.GetMetadata(fileUri, content);
         var references = NorgParser.GetReferences(fileUri, content);
         var doc = new Document()
         {

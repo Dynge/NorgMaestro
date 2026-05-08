@@ -36,119 +36,129 @@ internal partial class NorgParser : INorgParser
 {
     public static async Task<NeorgMetadata> GetMetadata(Uri fileUri)
     {
+        string[] content = File.ReadAllLines(fileUri.LocalPath);
+        return GetMetadata(fileUri, content);
+    }
+
+    public static NeorgMetadata GetMetadata(Uri fileUri, string[] content)
+    {
         NeorgMetadata metadata = new() { FileUri = fileUri };
 
-        using (
-            FileStream fs = File.Open(
-                fileUri.LocalPath,
-                FileMode.Open,
-                FileAccess.Read,
-                FileShare.ReadWrite
-            )
-        )
-        using (StreamReader streamReader = new(fs, true))
+        using StringReader streamReader = new(string.Join('\n', content));
+        string? line = await streamReader.ReadLineAsync()?.Trim();
+        bool? insideMetadata = null;
+        uint lineNr = 0;
+        while (line is not null)
         {
-            string? line = (await streamReader.ReadLineAsync())?.Trim();
-            bool? insideMetadata = null;
-            uint lineNr = 0;
-            while (line is not null)
+            insideMetadata = line switch
             {
-                insideMetadata = line switch
-                {
-                    "@document.meta" => true,
-                    "@end" => false,
-                    _ => insideMetadata,
-                };
-                if (insideMetadata is false)
-                {
+                "@document.meta" => true,
+                "@end" => false,
+                _ => insideMetadata,
+            };
+            if (insideMetadata is false)
+            {
+                break;
+            }
+
+            switch (line)
+            {
+                case string when NorgMetaTitle().Matches(line).Count > 0:
+                    Match match = NorgMetaTitle().Matches(line).First();
+                    uint matchEnd = (uint)(match.Index + match.Length);
+                    metadata = metadata with
+                    {
+                        Title = new()
+                        {
+                            Name = line[(int)matchEnd..],
+                            Range = new()
+                            {
+                                Start = new() { Line = lineNr, Character = matchEnd },
+                                End = new() { Line = lineNr, Character = (uint)line.Length },
+                            },
+                        },
+                    };
                     break;
-                }
-
-                switch (line)
-                {
-                    case string when NorgMetaTitle().Matches(line).Count > 0:
-                        Match match = NorgMetaTitle().Matches(line).First();
-                        uint matchEnd = (uint)(match.Index + match.Length);
-                        metadata = metadata with
+                case string when NorgMetaDescription().Matches(line).Count > 0:
+                    match = NorgMetaDescription().Matches(line).First();
+                    matchEnd = (uint)(match.Index + match.Length);
+                    metadata = metadata with
+                    {
+                        Description = new()
                         {
-                            Title = new()
+                            Name = line[(int)matchEnd..],
+                            Range = new()
                             {
-                                Name = line[(int)matchEnd..],
+                                Start = new() { Line = lineNr, Character = matchEnd },
+                                End = new() { Line = lineNr, Character = (uint)line.Length },
+                            },
+                        },
+                    };
+                    break;
+                case string when NorgMetaAuthors().Matches(line).Count > 0:
+                    match = NorgMetaAuthors().Matches(line).First();
+                    matchEnd = (uint)(match.Index + match.Length);
+                    metadata = metadata with
+                    {
+                        Authors = new()
+                        {
+                            Name = line[(int)matchEnd..],
+                            Range = new()
+                            {
+                                Start = new() { Line = lineNr, Character = matchEnd },
+                                End = new() { Line = lineNr, Character = (uint)line.Length },
+                            },
+                        },
+                    };
+                    break;
+
+                case string when NorgMetaCategories().Matches(line).Count > 0:
+                    List<MetaField> categories = [];
+                    match = NorgMetaCategories().Matches(line).First();
+                    matchEnd = (uint)(match.Index + match.Length);
+                    if ((int)matchEnd < line.Length && line[(int)matchEnd] == '[')
+                    {
+                        matchEnd++;
+                    }
+
+                    string firstCategoryLine = line[(int)matchEnd..];
+                    uint categoryStart = matchEnd;
+                    uint categoryEnd = categoryStart + (uint)line.Length;
+
+                    if (firstCategoryLine.Trim().Length is not 0)
+                    {
+                        categories.Add(
+                            new()
+                            {
+                                Name = firstCategoryLine,
                                 Range = new()
                                 {
-                                    Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length },
+                                    Start = new() { Line = lineNr, Character = categoryStart },
+                                    End = new() { Line = lineNr, Character = categoryEnd },
                                 },
-                            },
-                        };
-                        break;
-                    case string when NorgMetaDescription().Matches(line).Count > 0:
-                        match = NorgMetaDescription().Matches(line).First();
-                        matchEnd = (uint)(match.Index + match.Length);
-                        metadata = metadata with
-                        {
-                            Description = new()
-                            {
-                                Name = line[(int)matchEnd..],
-                                Range = new()
-                                {
-                                    Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length },
-                                },
-                            },
-                        };
-                        break;
-                    case string when NorgMetaAuthors().Matches(line).Count > 0:
-                        match = NorgMetaAuthors().Matches(line).First();
-                        matchEnd = (uint)(match.Index + match.Length);
-                        metadata = metadata with
-                        {
-                            Authors = new()
-                            {
-                                Name = line[(int)matchEnd..],
-                                Range = new()
-                                {
-                                    Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length },
-                                },
-                            },
-                        };
-                        break;
+                            }
+                        );
+                    }
+                    line = streamReader.ReadLine();
+                    lineNr++;
 
-                    case string when NorgMetaCategories().Matches(line).Count > 0:
-
-                        List<MetaField> categories = [];
-                        match = NorgMetaCategories().Matches(line).First();
-
-                        matchEnd = (uint)(match.Index + match.Length);
-
-                        if (line.Length <= matchEnd)
-                        {
-                            // There is nothing after the category
-                            metadata = metadata with
-                            {
-                                Categories = [],
-                            };
-                            break;
-                        }
-                        if (line[(int)matchEnd] == '[')
-                        {
-                            matchEnd++;
-                        }
-
-                        string firstCategoryLine = line[(int)matchEnd..];
-                        uint categoryStart = matchEnd;
-                        uint categoryEnd = categoryStart + (uint)line.Length;
-
-                        if (firstCategoryLine.Trim().Length is not 0)
+                    while (line is not null && !line.EndsWith(']'))
+                    {
+                        categoryStart = (uint)line.TakeWhile(char.IsWhiteSpace).Count();
+                        categoryEnd = (uint)line.Length;
+                        if (line.Trim().Length is not 0)
                         {
                             categories.Add(
                                 new()
                                 {
-                                    Name = firstCategoryLine,
+                                    Name = line,
                                     Range = new()
                                     {
-                                        Start = new() { Line = lineNr, Character = categoryStart },
+                                        Start = new()
+                                        {
+                                            Line = lineNr,
+                                            Character = categoryStart,
+                                        },
                                         End = new() { Line = lineNr, Character = categoryEnd },
                                     },
                                 }
@@ -156,101 +166,75 @@ internal partial class NorgParser : INorgParser
                         }
                         line = await streamReader.ReadLineAsync();
                         lineNr++;
+                    }
 
-                        while (line is not null && !line.EndsWith(']'))
+                    metadata = metadata with { Categories = [.. categories] };
+                    break;
+                case string when NorgMetaCreated().Matches(line).Count > 0:
+                    match = NorgMetaCreated().Matches(line).First();
+                    matchEnd = (uint)(match.Index + match.Length);
+                    metadata = metadata with
+                    {
+                        Created = new()
                         {
-                            categoryStart = (uint)line.TakeWhile(char.IsWhiteSpace).Count();
-                            categoryEnd = (uint)line.Length;
-                            if (line.Trim().Length is not 0)
+                            Name = line[(int)matchEnd..],
+                            Range = new()
                             {
-                                categories.Add(
-                                    new()
-                                    {
-                                        Name = line,
-                                        Range = new()
-                                        {
-                                            Start = new()
-                                            {
-                                                Line = lineNr,
-                                                Character = categoryStart,
-                                            },
-                                            End = new() { Line = lineNr, Character = categoryEnd },
-                                        },
-                                    }
-                                );
-                            }
-                            line = await streamReader.ReadLineAsync();
-                            lineNr++;
-                        }
-
-                        metadata = metadata with { Categories = [.. categories] };
-                        break;
-                    case string when NorgMetaCreated().Matches(line).Count > 0:
-                        match = NorgMetaCreated().Matches(line).First();
-                        matchEnd = (uint)(match.Index + match.Length);
-                        metadata = metadata with
-                        {
-                            Created = new()
-                            {
-                                Name = line[(int)matchEnd..],
-                                Range = new()
-                                {
-                                    Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length },
-                                },
+                                Start = new() { Line = lineNr, Character = matchEnd },
+                                End = new() { Line = lineNr, Character = (uint)line.Length },
                             },
-                        };
-                        break;
-                    case string when NorgMetaUpdated().Matches(line).Count > 0:
-                        match = NorgMetaUpdated().Matches(line).First();
-                        matchEnd = (uint)(match.Index + match.Length);
-                        metadata = metadata with
+                        },
+                    };
+                    break;
+                case string when NorgMetaUpdated().Matches(line).Count > 0:
+                    match = NorgMetaUpdated().Matches(line).First();
+                    matchEnd = (uint)(match.Index + match.Length);
+                    metadata = metadata with
+                    {
+                        Updated = new()
                         {
-                            Updated = new()
+                            Name = line[(int)matchEnd..],
+                            Range = new()
                             {
-                                Name = line[(int)matchEnd..],
-                                Range = new()
-                                {
-                                    Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length },
-                                },
+                                Start = new() { Line = lineNr, Character = matchEnd },
+                                End = new() { Line = lineNr, Character = (uint)line.Length },
                             },
-                        };
-                        break;
-                    case string when NorgMetaVersion().Matches(line).Count > 0:
-                        match = NorgMetaVersion().Matches(line).First();
-                        matchEnd = (uint)(match.Index + match.Length);
-                        metadata = metadata with
+                        },
+                    };
+                    break;
+                case string when NorgMetaVersion().Matches(line).Count > 0:
+                    match = NorgMetaVersion().Matches(line).First();
+                    matchEnd = (uint)(match.Index + match.Length);
+                    metadata = metadata with
+                    {
+                        Version = new()
                         {
-                            Version = new()
+                            Name = line[(int)matchEnd..],
+                            Range = new()
                             {
-                                Name = line[(int)matchEnd..],
-                                Range = new()
-                                {
-                                    Start = new() { Line = lineNr, Character = matchEnd },
-                                    End = new() { Line = lineNr, Character = (uint)line.Length },
-                                },
+                                Start = new() { Line = lineNr, Character = matchEnd },
+                                End = new() { Line = lineNr, Character = (uint)line.Length },
                             },
-                        };
-                        break;
+                        },
+                    };
+                    break;
 
-                    default:
-
-                        break;
-                }
-
-                if (line is not null)
-                {
-                    line = await streamReader.ReadLineAsync();
-                    lineNr++;
-                }
+                default:
+                    break;
             }
-            if (insideMetadata is true)
+
+            if (line is not null)
             {
-                // Malformed metadata - should have an end statement.
-                return new() { FileUri = metadata.FileUri };
+                line = streamReader.ReadLine();
+                lineNr++;
             }
         }
+
+        if (insideMetadata is true)
+        {
+            return new() { FileUri = metadata.FileUri };
+        }
+
         return metadata;
     }
 
