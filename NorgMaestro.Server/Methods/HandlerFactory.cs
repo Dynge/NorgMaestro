@@ -15,6 +15,7 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
             MethodType.Exit => new ExitHandler(_writer),
             MethodType.DidOpen => new DidOpenHandler(_state, _writer, req),
             MethodType.DidChange => new DidChangeHandler(_state, _writer, req),
+            MethodType.DidClose => new DidCloseHandler(_state, _writer, req),
             MethodType.DidSave => new DidSaveHandler(_state, _writer, req),
             MethodType.Initialize => new InitializeHandler(_state, _writer, req),
             MethodType.Initialized => new InitializedHandler(_writer),
@@ -64,6 +65,7 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
         public const string PrepareCallHierarchy = "textDocument/prepareCallHierarchy";
         public const string DidOpen = "textDocument/didOpen";
         public const string DidChange = "textDocument/didChange";
+        public const string DidClose = "textDocument/didClose";
         public const string DidSave = "textDocument/didSave";
         public const string Hover = "textDocument/hover";
         public const string Definition = "textDocument/definition";

@@ -71,6 +71,12 @@ public class LanguageServerState
         return doc;
     }
 
+    public void RemoveDocument(Uri fileUri)
+    {
+        RemoveReferencesFromDocument(fileUri);
+        _documents.Remove(fileUri);
+    }
+
     public Dictionary<Uri, Diagnostic[]> GetDiagnostics()
     {
         Dictionary<Uri, List<Diagnostic>> diagnosticsByDoc = [];
