@@ -21,25 +21,27 @@ public class IncomingCallsHandler(LanguageServerState state, RpcMessage request)
             );
         }
 
-        List<IncomingCallsResponseParams> response =
-        [
-            .. refs.Select(reference =>
+        List<IncomingCallsResponseParams> response = refs
+            .GroupBy(reference => reference.Location.Uri)
+            .Select(group =>
             {
-                _state.Documents.TryGetValue(new(reference.Location.Uri), out var doc);
+                _state.Documents.TryGetValue(new(group.Key), out var doc);
+                TextRange displayRange = group.First().Location.Range;
                 return new IncomingCallsResponseParams()
                 {
                     From = new()
                     {
-                        Uri = reference.Location.Uri,
+                        Uri = group.Key,
                         Name = doc?.Metadata.Title?.Name ?? "Unknown title",
                         Kind = SymbolKind.File,
-                        Range = reference.Location.Range,
-                        SelectionRange = reference.Location.Range,
+                        Range = displayRange,
+                        SelectionRange = displayRange
                     },
-                    FromRanges = [reference.Location.Range],
+                    FromRanges = [.. group.Select(reference => reference.Location.Range)],
                 };
-            }),
-        ];
+             })
++            .OrderBy(call => call.From.Uri)
+             .ToList();
 
         return Task.FromResult<Response?>(Response.OfSuccess(completionRequest.Id, response));
     }
