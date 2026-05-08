@@ -49,4 +49,52 @@ public sealed class HandlerFactoryTests
         var handler = _handlerFactory.CreateHandler(rpcMessage);
         (handler is CantHandler).Should().BeTrue();
     }
+
+    [Fact]
+    public void ShouldUseInjectedRegistrationWithoutEditingFactory()
+    {
+        var stream = new MemoryStream();
+        HandlerFactory customFactory = new(
+            new(),
+            new RpcMessageWriter(stream),
+            [new("custom/method", _ => new NoneHandler())]
+        );
+        var rpcMessage = new RpcMessage()
+        {
+            Id = 1,
+            Method = "custom/method",
+            JsonRpc = "2.0",
+        };
+
+        IMessageHandler handler = customFactory.CreateHandler(rpcMessage);
+        handler.Should().BeOfType<NoneHandler>();
+    }
+
+    [Fact]
+    public void ShouldThrowOnDuplicateInjectedMethodRegistrations()
+    {
+        var stream = new MemoryStream();
+
+        Action create = () =>
+            _ = new HandlerFactory(
+                new(),
+                new RpcMessageWriter(stream),
+                [
+                    new("custom/method", _ => new NoneHandler()),
+                    new("custom/method", _ => new NoneHandler()),
+                ]
+            );
+
+        create.Should().Throw<ArgumentException>().WithMessage("*Duplicate handler registration*");
+    }
+
+    [Fact]
+    public void ShouldThrowOnNullInjectedRegistrations()
+    {
+        var stream = new MemoryStream();
+
+        Action create = () => _ = new HandlerFactory(new(), new RpcMessageWriter(stream), null!);
+
+        create.Should().Throw<ArgumentNullException>();
+    }
 }

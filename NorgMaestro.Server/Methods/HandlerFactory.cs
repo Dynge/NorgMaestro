@@ -5,38 +5,27 @@ namespace NorgMaestro.Server.Methods;
 public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
 {
     private readonly IRpcWriter _writer = writer;
-    private readonly LanguageServerState _state = state;
+    private readonly Dictionary<string, Func<RpcMessage, IMessageHandler>> _registrations =
+        BuildRegistrationMap(DefaultHandlerRegistrations.Create(state, writer));
+
+    public HandlerFactory(
+        LanguageServerState state,
+        IRpcWriter writer,
+        IEnumerable<HandlerRegistration> registrations
+    )
+        : this(state, writer)
+    {
+        _registrations = BuildRegistrationMap(registrations);
+    }
 
     public IMessageHandler CreateHandler(RpcMessage req)
     {
-        IMessageHandler handler = req.Method switch
+        if (_registrations.TryGetValue(req.Method, out Func<RpcMessage, IMessageHandler>? factory))
         {
-            MethodType.Shutdown => new ShutdownHandler(_writer, req),
-            MethodType.Exit => new ExitHandler(_writer),
-            MethodType.DidOpen => new DidOpenHandler(_state, _writer, req),
-            MethodType.DidChange => new DidChangeHandler(_state, _writer, req),
-            MethodType.DidClose => new DidCloseHandler(_state, _writer, req),
-            MethodType.DidSave => new DidSaveHandler(_state, _writer, req),
-            MethodType.Initialize => new InitializeHandler(_state, _writer, req),
-            MethodType.Initialized => new InitializedHandler(_writer),
-            MethodType.Completion => new CompletionHandler(_state, req),
-            MethodType.Hover => new HoverHandler(_state, req),
-            MethodType.Rename => new RenameHandler(_state, req),
-            MethodType.PrepareRename => new PrepareRenameHandler(_state, req),
-            MethodType.PrepareCallHierarchy => new PrepareCallHierarchyHandler(_state, req),
-            MethodType.IncomingCalls => new IncomingCallsHandler(_state, req),
-            MethodType.OutgoingCalls => new OutgoingCallsHandler(_state, req),
-            MethodType.References => new ReferencesHandler(_state, req),
-            MethodType.WorkspaceSymbols => new WorkspaceSymbolHandler(_state, req),
-            MethodType.Definition => new DefinitionHandler(_state, req),
-            MethodType.DocumentSymbol => new DocumentSymbolHandler(_state, req),
-            MethodType.DocumentLink => new DocumentLinkHandler(_state, req),
-            MethodType.CodeAction => new CodeActionHandler(_state, req),
-            MethodType.ExecuteCommand => new ExecuteCommandHandler(_state, _writer, req),
-            _ => new CantHandler(_writer, req),
-        };
+            return factory(req);
+        }
 
-        return handler;
+        return new CantHandler(_writer, req);
     }
 
     public async Task<bool> TryHandleRequest(RpcMessage req)
@@ -75,5 +64,27 @@ public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
         public const string ExecuteCommand = "workspace/executeCommand";
         public const string Shutdown = "shutdown";
         public const string Exit = "exit";
+    }
+
+    private static Dictionary<string, Func<RpcMessage, IMessageHandler>> BuildRegistrationMap(
+        IEnumerable<HandlerRegistration> registrations
+    )
+    {
+        ArgumentNullException.ThrowIfNull(registrations);
+
+        Dictionary<string, Func<RpcMessage, IMessageHandler>> map = [];
+        foreach (HandlerRegistration registration in registrations)
+        {
+            ArgumentException.ThrowIfNullOrWhiteSpace(registration.Method);
+            if (!map.TryAdd(registration.Method, registration.CreateHandler))
+            {
+                throw new ArgumentException(
+                    $"Duplicate handler registration for method '{registration.Method}'.",
+                    nameof(registrations)
+                );
+            }
+        }
+
+        return map;
     }
 }
