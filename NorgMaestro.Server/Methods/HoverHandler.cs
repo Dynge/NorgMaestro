@@ -30,21 +30,26 @@ public class HoverHandler(LanguageServerState state, RpcMessage request) : IMess
             return Task.FromResult<Response?>(Response.OfSuccess(hoverRequest.Id));
         }
 
-        var topRange = new TextRange()
+        Uri targetUri = _state.ResolveLinkUri(link);
+        if (_state.Documents.TryGetValue(targetUri, out Document? targetDoc) is false)
+        {
+            return Response.OfSuccess(hoverRequest.Id);
+        }
+
+        var previewRange = new TextRange()
         {
             Start = new() { Line = 0, Character = 0 },
-            End = new() { Line = 200, Character = 0 },
+            End = new() { Line = Math.Min((uint)targetDoc.Content.Length, 200u), Character = 0 },
         };
-        Uri targetUri = _state.ResolveLinkUri(link);
-        var topLines = FileUtil.ReadRange(targetUri, topRange);
+        string preview = string.Join('\n', targetDoc.Content.Take(200));
 
         return Task.FromResult<Response?>(
             Response.OfSuccess(
                 hoverRequest.Id,
                 new Hover()
                 {
-                    Range = topRange,
-                    Contents = new() { Language = "norg", Value = string.Join('\n', topLines) },
+                    Range = link.AbsoluteRange,
+                    Contents = new() { Language = "norg", Value = preview },
                 }
             )
         );
