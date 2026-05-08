@@ -38,4 +38,22 @@ public sealed class RpcReaderTests
         }
         decodedMessage.Method.Should().Be(MethodType.Initialize);
     }
+
+    [Fact]
+    public void ShouldDecodeUtf8BodyUsingByteLength()
+    {
+        const string body =
+            "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"rootUri\":\"file:///tmp/caf%C3%A9\"}}";
+        int contentLength = Encoding.UTF8.GetByteCount(body);
+        string data = $"Content-Length: {contentLength}\r\n\r\n{body}";
+        SendToStream(data);
+
+        var decodedMessage = _reader.Decode();
+        if (decodedMessage is null)
+        {
+            Assert.Fail("decodedMessage is null");
+        }
+
+        decodedMessage.Method.Should().Be(MethodType.Initialize);
+    }
 }

@@ -15,40 +15,151 @@ public interface IRpcReader
 
 public class RpcMessageReader(Stream read) : IRpcReader
 {
-    private readonly StreamReader _reader = new(read, Encoding.UTF8);
+    private readonly Stream _stream = read;
+    private readonly Stack<byte> _pushback = [];
+    private bool _bomHandled;
 
     private const string ContentLengthHeader = "Content-Length: ";
 
     public async Task<RpcMessage?> DecodeAsync()
     {
-        string? header = await _reader.ReadLineAsync();
-        bool headerExists = header?.StartsWith(ContentLengthHeader) ?? false;
-        if (headerExists is false)
+        await Task.Yield();
+        EnsureUtf8BomHandled();
+
+        string? header = ReadAsciiLine();
+        if (header is null || !header.StartsWith(ContentLengthHeader))
         {
             return null;
         }
+
         bool contentLengthExists = int.TryParse(
-            string.Concat(header!.SkipWhile(c => !char.IsDigit(c)).TakeWhile(char.IsDigit)),
+            string.Concat(header.SkipWhile(c => !char.IsDigit(c)).TakeWhile(char.IsDigit)),
             out int contentLength
         );
-        if (contentLengthExists is false)
+        if (!contentLengthExists)
         {
             return null;
         }
 
-        string? newline = await _reader.ReadLineAsync();
-        bool newLinesExists = newline?.SequenceEqual("") ?? false;
-        if (newLinesExists is false)
+        while (true)
         {
-            return null;
+            string? nextHeader = ReadAsciiLine();
+            if (nextHeader is null)
+            {
+                return null;
+            }
+
+            if (nextHeader.Length == 0)
+            {
+                break;
+            }
         }
 
-        var buffer = new char[contentLength];
-        _ = await _reader.ReadAsync(buffer, 0, contentLength);
+        byte[] buffer = new byte[contentLength];
+        var totalRead = 0;
+        while (totalRead < contentLength)
+        {
+            int readCount = _stream.Read(buffer, totalRead, contentLength - totalRead);
+            if (readCount == 0)
+            {
+                return null;
+            }
 
-        RpcMessage? pson = JsonSerializer.Deserialize<RpcMessage>(string.Concat(buffer));
+            totalRead += readCount;
+        }
+
+        string content = Encoding.UTF8.GetString(buffer);
+
+        RpcMessage? pson = JsonSerializer.Deserialize<RpcMessage>(content);
 
         return pson;
+    }
+
+    private string? ReadAsciiLine()
+    {
+        var bytes = new List<byte>();
+        while (true)
+        {
+            int raw = ReadByte();
+            if (raw == -1)
+            {
+                return bytes.Count == 0 ? null : Encoding.ASCII.GetString(bytes.ToArray());
+            }
+
+            byte next = (byte)raw;
+            if (next == (byte)'\n')
+            {
+                if (bytes.Count > 0 && bytes[^1] == (byte)'\r')
+                {
+                    bytes.RemoveAt(bytes.Count - 1);
+                }
+
+                return Encoding.ASCII.GetString(bytes.ToArray());
+            }
+
+            bytes.Add(next);
+        }
+    }
+
+    private int ReadByte()
+    {
+        if (_pushback.Count > 0)
+        {
+            return _pushback.Pop();
+        }
+
+        return _stream.ReadByte();
+    }
+
+    private void EnsureUtf8BomHandled()
+    {
+        if (_bomHandled)
+        {
+            return;
+        }
+
+        _bomHandled = true;
+
+        int first = ReadByte();
+        if (first == -1)
+        {
+            return;
+        }
+
+        if (first != 0xEF)
+        {
+            _pushback.Push((byte)first);
+            return;
+        }
+
+        int second = ReadByte();
+        if (second == -1)
+        {
+            _pushback.Push((byte)first);
+            return;
+        }
+
+        if (second != 0xBB)
+        {
+            _pushback.Push((byte)second);
+            _pushback.Push((byte)first);
+            return;
+        }
+
+        int third = ReadByte();
+        if (third == -1)
+        {
+            _pushback.Push((byte)second);
+            _pushback.Push((byte)first);
+            return;
+        }
+
+        if (third != 0xBF)
+        {
+            _pushback.Push((byte)third);
+            _pushback.Push((byte)second);
+            _pushback.Push((byte)first);
+        }
     }
 }
 
