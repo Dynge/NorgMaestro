@@ -1,15 +1,12 @@
-﻿using NorgMaestro.Server.Methods;
+using NorgMaestro.Server.Methods;
 using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server;
 
-internal sealed class NeorgLspServer(
-    IRpcReader reader,
-    HandlerFactory handlerFactory
-)
+internal sealed class NeorgLspServer(IRpcReader reader, IHandlerResolver handlerResolver)
 {
     private readonly IRpcReader _reader = reader;
-    private readonly HandlerFactory _handlerFactory = handlerFactory;
+    private readonly IHandlerResolver _handlerResolver = handlerResolver;
 
     public async Task Startup()
     {
@@ -20,23 +17,22 @@ internal sealed class NeorgLspServer(
             {
                 continue;
             }
-            // Just run the command!
             _ = Task.Run(async () => await HandleRequest(req));
         }
     }
 
-    private async Task HandleRequest(RpcMessage message)
+    private async Task HandleRequest(RpcMessage req)
     {
         try
         {
-            var didSucceed = await _handlerFactory.TryHandleRequest(message);
+            var didSucceed = _handlerResolver.TryHandleRequest(req);
             if (!didSucceed) { }
         }
         catch (InvalidDataException)
         {
-            // TODO: Create shutdown exception
-            // Shutdown
-            Environment.Exit(0);
+            return;
         }
+
+        await Task.CompletedTask;
     }
 }

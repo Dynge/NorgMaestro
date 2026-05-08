@@ -2,7 +2,7 @@ using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
 
-public class HandlerFactory(LanguageServerState state, IRpcWriter writer)
+public class HandlerFactory(LanguageServerState state, IRpcWriter writer) : IHandlerResolver
 {
     private readonly IRpcWriter _writer = writer;
     private readonly Dictionary<string, Func<RpcMessage, IMessageHandler>> _registrations =
