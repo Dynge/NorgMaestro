@@ -13,6 +13,7 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
     public Response? HandleRequest()
     {
         ExecuteCommandRequest executeRequest = ExecuteCommandRequest.From(_request);
+        bool handled = true;
         switch (executeRequest.Params.Command)
         {
             case CodeActionHandler.CreateNoteCommand:
@@ -43,9 +44,26 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
                 CreateNoteFromLinkText(executeRequest.Params.Arguments);
                 PublishDiagnostics();
                 break;
+            default:
+                handled = false;
+                break;
         }
 
-        return executeRequest.Id is int id ? Response.OfSuccess(id) : null;
+        if (handled is false)
+        {
+            return executeRequest.Id is int id
+                ? Response.OfError(
+                    id,
+                    new
+                    {
+                        code = -32601,
+                        message = $"Unknown command: {executeRequest.Params.Command}"
+                    }
+                )
+                : null;
+        }
+
+        return executeRequest.Id is int requestId ? Response.OfSuccess(requestId) : null;
     }
 
     private string? CreateMissingNote(JsonElement[]? arguments)

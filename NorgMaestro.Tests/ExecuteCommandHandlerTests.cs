@@ -100,6 +100,36 @@ public sealed class ExecuteCommandHandlerTests
         }
     }
 
+    [Fact]
+    public void ShouldReturnErrorForUnknownExecuteCommand()
+    {
+        LanguageServerState state = new();
+        BufferingWriter writer = new();
+        RpcMessage request = new()
+        {
+            Id = 96,
+            JsonRpc = "2.0",
+            Method = "workspace/executeCommand",
+            Params = JsonSerializer.SerializeToElement(
+                new
+                {
+                    command = "norgmaestro.command.unknown",
+                    arguments = Array.Empty<object>()
+                }
+            )
+        };
+
+        ExecuteCommandHandler handler = new(state, writer, request);
+        Response? response = handler.HandleRequest();
+
+        response.Should().NotBeNull();
+        response!.Error.Should().NotBeNull();
+        response.Result.Should().BeNull();
+        JsonElement error = response.Error ?? throw new Xunit.Sdk.XunitException("Missing error payload");
+        error.GetProperty("code").GetInt32().Should().Be(-32601);
+        error.GetProperty("message").GetString().Should().Contain("Unknown command");
+    }
+
     private sealed class BufferingWriter : IRpcWriter
     {
         public int WriteCount { get; private set; }
