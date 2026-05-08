@@ -13,7 +13,14 @@ public class DidOpenHandler(LanguageServerState state, IRpcWriter writer, RpcMes
     {
         DidOpenNotification didOpenNotification = DidOpenNotification.From(_request);
         Uri uri = didOpenNotification.Params.TextDocument.Uri;
-        if (File.Exists(uri.LocalPath))
+        string? text = didOpenNotification.Params.TextDocument.Text;
+        if (text is not null)
+        {
+            string normalized = text.Replace("\r\n", "\n").Replace("\r", "\n");
+            string[] content = normalized.Split('\n');
+            _ = _state.UpdateDocument(uri, content);
+        }
+        else if (File.Exists(uri.LocalPath))
         {
             _ = _state.UpdateDocument(uri);
         }
