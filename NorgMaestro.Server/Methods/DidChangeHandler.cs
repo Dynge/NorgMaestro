@@ -39,6 +39,11 @@ public class DidChangeHandler(LanguageServerState state, IRpcWriter writer, RpcM
 
         int startOffset = GetOffset(source, change.Range.Start);
         int endOffset = GetOffset(source, change.Range.End);
+        if (endOffset < startOffset)
+        {
+            return source;
+        }
+
         return source[..startOffset] + change.Text + source[endOffset..];
     }
 
