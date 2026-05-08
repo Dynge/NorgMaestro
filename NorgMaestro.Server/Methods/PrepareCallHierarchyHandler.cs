@@ -18,7 +18,7 @@ public class PrepareCallHierarchyHandler(LanguageServerState state, RpcMessage r
             {
                 Name = doc.Metadata.Title?.Name ?? "",
                 Kind = SymbolKind.File,
-                Uri = doc.Uri.AbsolutePath,
+                Uri = doc.Uri.AbsoluteUri,
                 Range = new()
                 {
                     Start = new() { Line = 0, Character = 0 },
