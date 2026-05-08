@@ -40,8 +40,8 @@ public class IncomingCallsHandler(LanguageServerState state, RpcMessage request)
                     FromRanges = [.. group.Select(reference => reference.Location.Range)],
                 };
              })
-+            .OrderBy(call => call.From.Uri)
-             .ToList();
+            .OrderBy(call => call.From.Uri)
+            .ToList();
 
         return Task.FromResult<Response?>(Response.OfSuccess(completionRequest.Id, response));
     }

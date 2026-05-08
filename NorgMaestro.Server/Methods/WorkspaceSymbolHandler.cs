@@ -21,7 +21,7 @@ public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessag
             string q when KindRegex().IsMatch(q) => wsSymbol =>
             {
                 var symbolMatch = KindRegex().Match(q).Groups[1].Value;
-                if (Enum.TryParse<SymbolKind>(symbolMatch, out var kind) is false)
+                if (Enum.TryParse<SymbolKind>(symbolMatch, true, out var kind) is false)
                 {
                     return false;
                 }
@@ -29,8 +29,9 @@ public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessag
             },
             string q => wsSymbol =>
             {
-                return wsSymbol.Name.Contains(q);
+                return wsSymbol.Name.Contains(q, StringComparison.OrdinalIgnoreCase);
             },
+            _ => _ => true,
         };
         foreach (Document doc in _state.Documents.Values)
         {
@@ -60,8 +61,11 @@ public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessag
             }
             symbols.Add(symbol);
         }
-        return Task.FromResult<Response?>(
-            Response.OfSuccess(workspaceRequest.Id, symbols.ToArray())
-        );
+
+        WorkspaceSymbol[] ordered = symbols
+            .OrderBy(symbol => symbol.Name, StringComparer.OrdinalIgnoreCase)
+            .ThenBy(symbol => symbol.Location.Uri, StringComparer.OrdinalIgnoreCase)
+            .ToArray();
+        return Task.FromResult<Response?>(Response.OfSuccess(workspaceRequest.Id, ordered));
     }
 }
