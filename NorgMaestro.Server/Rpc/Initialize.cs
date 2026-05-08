@@ -33,6 +33,9 @@ public record InitializeRequestParams
     [JsonPropertyName("rootUri")]
     public Uri? RootUri { get; init; } = null;
 
+    [JsonPropertyName("rootPath")]
+    public string? RootPath { get; init; } = null;
+
     [JsonPropertyName("workspaceFolders")]
     public IEnumerable<WorkspaceFolder>? WorkspaceFolders { get; init; } = null;
 

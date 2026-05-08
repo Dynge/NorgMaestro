@@ -12,24 +12,7 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
     public async Task<Response?> HandleRequest()
     {
         InitializeRequest initRequest = InitializeRequest.From(_request);
-        Uri rootUri;
-        if (
-            initRequest.Params.WorkspaceFolders is not null
-            && initRequest.Params.WorkspaceFolders.Any()
-        )
-        {
-            rootUri = initRequest.Params.WorkspaceFolders.First().Uri;
-        }
-        else if (initRequest.Params.RootUri is not null)
-        {
-            rootUri = initRequest.Params.RootUri;
-        }
-        else
-        {
-            throw new ArgumentException(
-                $"Found no root folder in init params: {initRequest.Params}"
-            );
-        }
+        Uri rootUri = ResolveRootUri(initRequest.Params);
         await _state.Initialize(rootUri, initRequest.Params.WorkspaceFolders);
         PublishDiagnostics();
         InitializeResultParams res = new()
@@ -69,6 +52,26 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
         };
 
         return Response.OfSuccess(initRequest.Id, res);
+    }
+
+    private static Uri ResolveRootUri(InitializeRequestParams requestParams)
+    {
+        if (requestParams.WorkspaceFolders?.Any() is true)
+        {
+            return requestParams.WorkspaceFolders.First().Uri;
+        }
+
+        if (requestParams.RootUri is not null)
+        {
+            return requestParams.RootUri;
+        }
+
+        if (string.IsNullOrWhiteSpace(requestParams.RootPath) is false)
+        {
+            return new Uri(Path.GetFullPath(requestParams.RootPath));
+        }
+
+        return new Uri(Path.GetFullPath(AppContext.BaseDirectory));
     }
 
     private void PublishDiagnostics()
