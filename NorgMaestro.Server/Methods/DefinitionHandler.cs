@@ -1,4 +1,3 @@
-using NorgMaestro.Server.Parser;
 using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
@@ -18,22 +17,14 @@ public class DefinitionHandler(LanguageServerState state, RpcMessage request) : 
             definitionRequest.Params.Position
         );
 
-        NorgLink? link = NorgParser.ParseLink(
-            definitionRequest.Params.TextDocument.Uri,
-            definitionRequest.Params.Position,
-            line
-        );
-
-        Uri targetUri;
-        if (link is not null)
-        {
-            targetUri = _state.ResolveLinkUri(link);
-        }
-        else if (_state.TryGetTitleTarget(definitionRequest.Params.TextDocument.Uri, definitionRequest.Params.Position, out Uri titleTarget))
-        {
-            targetUri = titleTarget;
-        }
-        else
+        if (
+            _state.TryResolveTargetUriAtPosition(
+                definitionRequest.Params.TextDocument.Uri,
+                definitionRequest.Params.Position,
+                line,
+                out Uri targetUri
+            ) is false
+        )
         {
             return Task.FromResult<Response?>(
                 Response.OfSuccess(definitionRequest.Id, Array.Empty<Location>())

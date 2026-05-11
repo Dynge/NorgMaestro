@@ -17,22 +17,14 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
             renameRequest.Params.TextDocument.Uri,
             renameRequest.Params.Position
         );
-        NorgLink? link = NorgParser.ParseLink(
-            renameRequest.Params.TextDocument.Uri,
-            renameRequest.Params.Position,
-            line
-        );
-
-        Uri targetUri;
-        if (link is not null)
-        {
-            targetUri = _state.ResolveLinkUri(link);
-        }
-        else if (_state.TryGetTitleTarget(renameRequest.Params.TextDocument.Uri, renameRequest.Params.Position, out Uri titleTarget))
-        {
-            targetUri = titleTarget;
-        }
-        else
+        if (
+            _state.TryResolveTargetUriAtPosition(
+                renameRequest.Params.TextDocument.Uri,
+                renameRequest.Params.Position,
+                line,
+                out Uri targetUri
+            ) is false
+        )
         {
             return Task.FromResult<Response?>(Response.OfSuccess(renameRequest.Id));
         }

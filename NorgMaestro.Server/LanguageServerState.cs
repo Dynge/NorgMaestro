@@ -203,6 +203,25 @@ public class LanguageServerState
         return true;
     }
 
+    internal bool TryResolveTargetUriAtPosition(
+        Uri sourceUri,
+        Position position,
+        string line,
+        out Uri targetUri
+    )
+    {
+        targetUri = sourceUri;
+
+        NorgLink? link = NorgParser.ParseLink(sourceUri, position, line);
+        if (link is not null)
+        {
+            targetUri = ResolveLinkUri(link);
+            return true;
+        }
+
+        return TryGetTitleTarget(sourceUri, position, out targetUri);
+    }
+
     internal void UpdateTitleInState(Uri targetUri, string newTitle)
     {
         if (_documents.TryGetValue(targetUri, out Document? doc) is false)

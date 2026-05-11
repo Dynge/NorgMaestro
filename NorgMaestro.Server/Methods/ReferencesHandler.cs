@@ -1,4 +1,3 @@
-using NorgMaestro.Server.Parser;
 using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
@@ -18,28 +17,14 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
             referenceRequest.Params.Position
         );
 
-        NorgLink? link = NorgParser.ParseLink(
-            referenceRequest.Params.TextDocument.Uri,
-            referenceRequest.Params.Position,
-            line
-        );
-
-        Uri targetUri;
-        if (link is not null)
-        {
-            targetUri = _state.ResolveLinkUri(link);
-        }
-        else if (
-            _state.TryGetTitleTarget(
+        if (
+            _state.TryResolveTargetUriAtPosition(
                 referenceRequest.Params.TextDocument.Uri,
                 referenceRequest.Params.Position,
-                out Uri titleTarget
-            )
+                line,
+                out Uri targetUri
+            ) is false
         )
-        {
-            targetUri = titleTarget;
-        }
-        else
         {
             return Task.FromResult<Response?>(
                 Response.OfSuccess(referenceRequest.Id, Array.Empty<Location>())
