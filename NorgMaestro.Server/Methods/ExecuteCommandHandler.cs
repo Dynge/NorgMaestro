@@ -14,43 +14,8 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
     public async Task<Response?> HandleRequest()
     {
         ExecuteCommandRequest executeRequest = ExecuteCommandRequest.From(_request);
-        bool handled = true;
-        switch (executeRequest.Params.Command)
-        {
-            case CodeActionHandler.CreateNoteCommand:
-                _ = await CreateMissingNote(executeRequest.Params.Arguments);
-                await _diagnosticsPublisher.PublishAsync();
-                break;
-            case CodeActionHandler.CreateNoteAndOpenCommand:
-                string? created = await CreateMissingNote(executeRequest.Params.Arguments);
-                if (string.IsNullOrWhiteSpace(created) is false)
-                {
-                    await ShowDocument(created!);
-                }
-                await _diagnosticsPublisher.PublishAsync();
-                break;
-            case CodeActionHandler.CreateBacklinkSectionCommand:
-                await CreateBacklinkSection(executeRequest.Params.Arguments);
-                await _diagnosticsPublisher.PublishAsync();
-                break;
-            case CodeActionHandler.ExtractSelectionToNoteCommand:
-                await ExtractSelectionToNewNote(executeRequest.Params.Arguments);
-                await _diagnosticsPublisher.PublishAsync();
-                break;
-            case CodeActionHandler.MoveNoteToWorkspaceCommand:
-                await MoveNoteToWorkspace(executeRequest.Params.Arguments);
-                await _diagnosticsPublisher.PublishAsync();
-                break;
-            case CodeActionHandler.CreateNoteFromLinkTextCommand:
-                await CreateNoteFromLinkText(executeRequest.Params.Arguments);
-                await _diagnosticsPublisher.PublishAsync();
-                break;
-            default:
-                handled = false;
-                break;
-        }
-
-        if (handled is false)
+        Func<JsonElement[]?, Task>? handleCommand = ResolveCommandHandler(executeRequest.Params.Command);
+        if (handleCommand is null)
         {
             return
                 executeRequest.Id is int id
@@ -65,7 +30,38 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
                     : null;
         }
 
+        await handleCommand(executeRequest.Params.Arguments);
+        await _diagnosticsPublisher.PublishAsync();
+
         return executeRequest.Id is int requestId ? Response.OfSuccess(requestId) : null;
+    }
+
+    private Func<JsonElement[]?, Task>? ResolveCommandHandler(string command)
+    {
+        return command switch
+        {
+            CodeActionHandler.CreateNoteCommand => CreateMissingNoteCommand,
+            CodeActionHandler.CreateNoteAndOpenCommand => CreateMissingNoteAndOpenCommand,
+            CodeActionHandler.CreateBacklinkSectionCommand => CreateBacklinkSection,
+            CodeActionHandler.ExtractSelectionToNoteCommand => ExtractSelectionToNewNote,
+            CodeActionHandler.MoveNoteToWorkspaceCommand => MoveNoteToWorkspace,
+            CodeActionHandler.CreateNoteFromLinkTextCommand => CreateNoteFromLinkText,
+            _ => null,
+        };
+    }
+
+    private async Task CreateMissingNoteCommand(JsonElement[]? arguments)
+    {
+        _ = await CreateMissingNote(arguments);
+    }
+
+    private async Task CreateMissingNoteAndOpenCommand(JsonElement[]? arguments)
+    {
+        string? created = await CreateMissingNote(arguments);
+        if (string.IsNullOrWhiteSpace(created) is false)
+        {
+            await ShowDocument(created!);
+        }
     }
 
     private async Task<string?> CreateMissingNote(JsonElement[]? arguments)
