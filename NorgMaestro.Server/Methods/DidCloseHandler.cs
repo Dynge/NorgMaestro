@@ -5,29 +5,15 @@ namespace NorgMaestro.Server.Methods;
 public class DidCloseHandler(LanguageServerState state, IRpcWriter writer, RpcMessage request)
     : IMessageHandler
 {
+    private readonly DiagnosticsPublisher _diagnosticsPublisher = new(state, writer);
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
-    private readonly IRpcWriter _writer = writer;
 
-    public Task<Response?> HandleRequest()
+    public async Task<Response?> HandleRequest()
     {
         DidCloseNotification didCloseNotification = DidCloseNotification.From(_request);
         _state.RemoveDocument(didCloseNotification.Params.TextDocument.Uri);
-        PublishDiagnostics();
-        return Task.FromResult<Response?>(null);
-    }
-
-    private void PublishDiagnostics()
-    {
-        Dictionary<Uri, Diagnostic[]> diagnosticsByFile = _state.GetDiagnostics();
-        foreach (Document document in _state.Documents.Values)
-        {
-            Diagnostic[] diagnostics = diagnosticsByFile.GetValueOrDefault(document.Uri, []);
-            _writer.EncodeAndWrite(
-                Notification.PublishDiagnostics(
-                    new() { Uri = document.Uri.AbsoluteUri, Diagnostics = diagnostics }
-                )
-            );
-        }
+        await _diagnosticsPublisher.PublishAsync();
+        return null;
     }
 }

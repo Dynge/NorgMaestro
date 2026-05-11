@@ -5,17 +5,17 @@ namespace NorgMaestro.Server.Methods;
 public class DidChangeHandler(LanguageServerState state, IRpcWriter writer, RpcMessage request)
     : IMessageHandler
 {
+    private readonly DiagnosticsPublisher _diagnosticsPublisher = new(state, writer);
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
-    private readonly IRpcWriter _writer = writer;
 
-    public Task<Response?> HandleRequest()
+    public async Task<Response?> HandleRequest()
     {
         DidChangeNotification didChangeNotification = DidChangeNotification.From(_request);
         Uri uri = didChangeNotification.Params.TextDocument.Uri;
         if (_state.Documents.TryGetValue(uri, out Document? document) is false)
         {
-            return Task.FromResult<Response?>(null);
+            return null;
         }
 
         string contentText = string.Join('\n', document.Content);
@@ -26,8 +26,8 @@ public class DidChangeHandler(LanguageServerState state, IRpcWriter writer, RpcM
 
         string[] content = NormalizeLines(contentText);
         _ = _state.UpdateDocument(uri, content);
-        PublishDiagnostics();
-        return Task.FromResult<Response?>(null);
+        await _diagnosticsPublisher.PublishAsync();
+        return null;
     }
 
     private static string ApplyChange(string source, TextDocumentContentChangeEvent change)
@@ -68,17 +68,4 @@ public class DidChangeHandler(LanguageServerState state, IRpcWriter writer, RpcM
         return text.Replace("\r", string.Empty).Split('\n');
     }
 
-    private void PublishDiagnostics()
-    {
-        Dictionary<Uri, Diagnostic[]> diagnosticsByFile = _state.GetDiagnostics();
-        foreach (Document document in _state.Documents.Values)
-        {
-            Diagnostic[] diagnostics = diagnosticsByFile.GetValueOrDefault(document.Uri, []);
-            _writer.EncodeAndWrite(
-                Notification.PublishDiagnostics(
-                    new() { Uri = document.Uri.AbsoluteUri, Diagnostics = diagnostics }
-                )
-            );
-        }
-    }
 }

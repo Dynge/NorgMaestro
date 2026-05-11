@@ -6,10 +6,10 @@ public class DidOpenHandler(LanguageServerState state, IRpcWriter writer, RpcMes
     : IMessageHandler
 {
     private readonly RpcMessage _request = request;
+    private readonly DiagnosticsPublisher _diagnosticsPublisher = new(state, writer);
     private readonly LanguageServerState _state = state;
-    private readonly IRpcWriter _writer = writer;
 
-    public Task<Response?> HandleRequest()
+    public async Task<Response?> HandleRequest()
     {
         DidOpenNotification didOpenNotification = DidOpenNotification.From(_request);
         Uri uri = didOpenNotification.Params.TextDocument.Uri;
@@ -24,21 +24,7 @@ public class DidOpenHandler(LanguageServerState state, IRpcWriter writer, RpcMes
         {
             _ = _state.UpdateDocument(uri);
         }
-        PublishDiagnostics();
-        return Task.FromResult<Response?>(null);
-    }
-
-    private void PublishDiagnostics()
-    {
-        Dictionary<Uri, Diagnostic[]> diagnosticsByFile = _state.GetDiagnostics();
-        foreach (Document document in _state.Documents.Values)
-        {
-            Diagnostic[] diagnostics = diagnosticsByFile.GetValueOrDefault(document.Uri, []);
-            _writer.EncodeAndWrite(
-                Notification.PublishDiagnostics(
-                    new() { Uri = document.Uri.AbsoluteUri, Diagnostics = diagnostics }
-                )
-            );
-        }
+        await _diagnosticsPublisher.PublishAsync();
+        return null;
     }
 }

@@ -6,6 +6,7 @@ namespace NorgMaestro.Server.Methods;
 public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer, RpcMessage request)
     : IMessageHandler
 {
+    private readonly DiagnosticsPublisher _diagnosticsPublisher = new(state, writer);
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
     private readonly IRpcWriter _writer = writer;
@@ -18,7 +19,7 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
         {
             case CodeActionHandler.CreateNoteCommand:
                 _ = await CreateMissingNote(executeRequest.Params.Arguments);
-                await PublishDiagnostics();
+                await _diagnosticsPublisher.PublishAsync();
                 break;
             case CodeActionHandler.CreateNoteAndOpenCommand:
                 string? created = await CreateMissingNote(executeRequest.Params.Arguments);
@@ -26,23 +27,23 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
                 {
                     await ShowDocument(created!);
                 }
-                await PublishDiagnostics();
+                await _diagnosticsPublisher.PublishAsync();
                 break;
             case CodeActionHandler.CreateBacklinkSectionCommand:
                 await CreateBacklinkSection(executeRequest.Params.Arguments);
-                await PublishDiagnostics();
+                await _diagnosticsPublisher.PublishAsync();
                 break;
             case CodeActionHandler.ExtractSelectionToNoteCommand:
                 await ExtractSelectionToNewNote(executeRequest.Params.Arguments);
-                await PublishDiagnostics();
+                await _diagnosticsPublisher.PublishAsync();
                 break;
             case CodeActionHandler.MoveNoteToWorkspaceCommand:
                 await MoveNoteToWorkspace(executeRequest.Params.Arguments);
-                await PublishDiagnostics();
+                await _diagnosticsPublisher.PublishAsync();
                 break;
             case CodeActionHandler.CreateNoteFromLinkTextCommand:
                 await CreateNoteFromLinkText(executeRequest.Params.Arguments);
-                await PublishDiagnostics();
+                await _diagnosticsPublisher.PublishAsync();
                 break;
             default:
                 handled = false;
@@ -228,19 +229,5 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
         _ = await _state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
         _ = await _state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
         await ShowDocument(targetPath);
-    }
-
-    private async Task PublishDiagnostics()
-    {
-        Dictionary<Uri, Diagnostic[]> diagnosticsByFile = _state.GetDiagnostics();
-        foreach (Document document in _state.Documents.Values)
-        {
-            Diagnostic[] diagnostics = diagnosticsByFile.GetValueOrDefault(document.Uri, []);
-            await _writer.EncodeAndWrite(
-                Notification.PublishDiagnostics(
-                    new() { Uri = document.Uri.AbsoluteUri, Diagnostics = diagnostics }
-                )
-            );
-        }
     }
 }
