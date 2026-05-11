@@ -12,16 +12,7 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
     {
         ReferencesRequest referenceRequest = ReferencesRequest.From(_request);
 
-        string line = FileUtil
-            .ReadRange(
-                referenceRequest.Params.TextDocument.Uri,
-                new()
-                {
-                    Start = referenceRequest.Params.Position,
-                    End = referenceRequest.Params.Position,
-                }
-            )
-            .FirstOrDefault("");
+        string line = GetLine(referenceRequest.Params.TextDocument.Uri, referenceRequest.Params.Position);
 
         NorgLink? link = NorgParser.ParseLink(
             referenceRequest.Params.TextDocument.Uri,
@@ -74,5 +65,27 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
         return Task.FromResult<Response?>(
             Response.OfSuccess(referenceRequest.Id, references.ToArray())
         );
+    }
+
+    private string GetLine(Uri sourceUri, Position position)
+    {
+        if (
+            _state.Documents.TryGetValue(sourceUri, out Document? document)
+            && position.Line < (uint)document.Content.Length
+        )
+        {
+            return document.Content[(int)position.Line];
+        }
+
+        return FileUtil
+            .ReadRange(
+                sourceUri,
+                new()
+                {
+                    Start = position,
+                    End = position,
+                }
+            )
+            .FirstOrDefault("");
     }
 }
