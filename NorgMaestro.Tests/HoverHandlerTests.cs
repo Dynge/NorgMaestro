@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class HoverHandlerTests
 {
     [Fact]
-    public void ShouldReturnNullHoverForUnresolvedTarget()
+    public async Task ShouldReturnNullHoverForUnresolvedTarget()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-hover-missing").FullName;
         try
@@ -18,11 +18,11 @@ public sealed class HoverHandlerTests
             File.WriteAllText(sourcePath, "See {:missing:}[Missing]");
 
             LanguageServerState state = new();
-            state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
             RpcMessage request = CreateHoverRequest(sourcePath, 0, 8, 1);
 
             HoverHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             response.Should().NotBeNull();
             response!.Result.Should().NotBeNull();
@@ -35,7 +35,7 @@ public sealed class HoverHandlerTests
     }
 
     [Fact]
-    public void ShouldReturnHoverPreviewForResolvedTarget()
+    public async Task ShouldReturnHoverPreviewForResolvedTarget()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-hover-hit").FullName;
         try
@@ -46,12 +46,12 @@ public sealed class HoverHandlerTests
             File.WriteAllText(targetPath, "@document.meta\ntitle: Target\n@end\n\nBody line");
 
             LanguageServerState state = new();
-            state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
-            state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
             RpcMessage request = CreateHoverRequest(sourcePath, 0, 8, 2);
 
             HoverHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             response.Should().NotBeNull();
             response!.Result.Should().NotBeNull();

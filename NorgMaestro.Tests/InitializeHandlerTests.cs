@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class InitializeHandlerTests
 {
     [Fact]
-    public void ShouldUseRootPathWhenRootUriAndWorkspaceFoldersMissing()
+    public async Task ShouldUseRootPathWhenRootUriAndWorkspaceFoldersMissing()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-initialize-rootpath").FullName;
         try
@@ -31,7 +31,7 @@ public sealed class InitializeHandlerTests
             };
 
             InitializeHandler handler = new(state, new BufferingWriter(), request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             response.Should().NotBeNull();
             state.WorkspaceRoot.Should().NotBeNull();
@@ -45,7 +45,7 @@ public sealed class InitializeHandlerTests
     }
 
     [Fact]
-    public void ShouldFallbackToAppBaseDirectoryWhenRootFieldsMissing()
+    public async Task ShouldFallbackToAppBaseDirectoryWhenRootFieldsMissing()
     {
         LanguageServerState state = new();
         RpcMessage request = new()
@@ -62,7 +62,7 @@ public sealed class InitializeHandlerTests
         };
 
         InitializeHandler handler = new(state, new BufferingWriter(), request);
-        Response? response = handler.HandleRequest().Result;
+        Response? response = await handler.HandleRequest();
 
         response.Should().NotBeNull();
         state.WorkspaceRoot.Should().NotBeNull();

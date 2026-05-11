@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class DocumentLinkHandlerTests
 {
     [Fact]
-    public void ShouldReturnDocumentLinksForNorgFileLinks()
+    public async Task ShouldReturnDocumentLinksForNorgFileLinks()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-links").FullName;
         try
@@ -22,7 +22,7 @@ public sealed class DocumentLinkHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -33,7 +33,7 @@ public sealed class DocumentLinkHandlerTests
             };
 
             DocumentLinkHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             DocumentLink[]? links = result.Deserialize<DocumentLink[]>();

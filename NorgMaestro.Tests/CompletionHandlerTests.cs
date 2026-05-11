@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class CompletionHandlerTests
 {
     [Fact]
-    public void ShouldCompleteLinksInsideBracesAndReplaceWholeLink()
+    public async Task ShouldCompleteLinksInsideBracesAndReplaceWholeLink()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-completion-link").FullName;
         try
@@ -22,8 +22,8 @@ public sealed class CompletionHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
-            state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
+            _ = await state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
 
             RpcMessage request = new()
             {
@@ -41,7 +41,7 @@ public sealed class CompletionHandlerTests
             };
 
             CompletionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             CompletionItem[]? items = result.Deserialize<CompletionItem[]>();
@@ -60,7 +60,7 @@ public sealed class CompletionHandlerTests
     }
 
     [Fact]
-    public void ShouldReturnCategoryCompletionsOutsideLinkBraces()
+    public async Task ShouldReturnCategoryCompletionsOutsideLinkBraces()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-completion-category").FullName;
         try
@@ -73,8 +73,8 @@ public sealed class CompletionHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
-            state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
+            _ = await state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
 
             RpcMessage request = new()
             {
@@ -92,7 +92,7 @@ public sealed class CompletionHandlerTests
             };
 
             CompletionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             CompletionItem[]? items = result.Deserialize<CompletionItem[]>();

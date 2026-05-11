@@ -101,7 +101,7 @@ public sealed class ExecuteCommandHandlerTests
     }
 
     [Fact]
-    public void ShouldReturnErrorForUnknownExecuteCommand()
+    public async Task ShouldReturnErrorForUnknownExecuteCommand()
     {
         LanguageServerState state = new();
         BufferingWriter writer = new();
@@ -120,7 +120,7 @@ public sealed class ExecuteCommandHandlerTests
         };
 
         ExecuteCommandHandler handler = new(state, writer, request);
-        Response? response = handler.HandleRequest().Result;
+        Response? response = await handler.HandleRequest();
 
         response.Should().NotBeNull();
         response!.Error.Should().NotBeNull();

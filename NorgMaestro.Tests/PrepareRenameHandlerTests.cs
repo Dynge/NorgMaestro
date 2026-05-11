@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class PrepareRenameHandlerTests
 {
     [Fact]
-    public void ShouldReturnLinkTextRangeWhenPrepareRenameOnLink()
+    public async Task ShouldReturnLinkTextRangeWhenPrepareRenameOnLink()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-prepare-rename").FullName;
         try
@@ -36,7 +36,7 @@ public sealed class PrepareRenameHandlerTests
             };
 
             PrepareRenameHandler handler = new(new LanguageServerState(), request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             response.Should().NotBeNull();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
@@ -54,7 +54,7 @@ public sealed class PrepareRenameHandlerTests
     }
 
     [Fact]
-    public void ShouldReturnTitleRangeWhenPrepareRenameOnMetadataTitle()
+    public async Task ShouldReturnTitleRangeWhenPrepareRenameOnMetadataTitle()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-prepare-rename-title").FullName;
         try
@@ -64,7 +64,7 @@ public sealed class PrepareRenameHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -81,7 +81,7 @@ public sealed class PrepareRenameHandlerTests
             };
 
             PrepareRenameHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             TextRange? range = result.Deserialize<TextRange>();
@@ -96,7 +96,7 @@ public sealed class PrepareRenameHandlerTests
     }
 
     [Fact]
-    public void ShouldReturnFileRangeWhenCursorInsideLinkTarget()
+    public async Task ShouldReturnFileRangeWhenCursorInsideLinkTarget()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-prepare-rename-file-range").FullName;
         try
@@ -106,7 +106,7 @@ public sealed class PrepareRenameHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -123,7 +123,7 @@ public sealed class PrepareRenameHandlerTests
             };
 
             PrepareRenameHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             TextRange? range = result.Deserialize<TextRange>();

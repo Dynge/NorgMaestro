@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class IncomingCallsHandlerTests
 {
     [Fact]
-    public void ShouldGroupIncomingCallsBySourceDocument()
+    public async Task ShouldGroupIncomingCallsBySourceDocument()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-incoming").FullName;
         try
@@ -25,8 +25,8 @@ public sealed class IncomingCallsHandlerTests
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             Uri targetUri = new(Path.GetFullPath(targetPath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
-            state.UpdateDocument(targetUri);
+            _ = await state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(targetUri);
 
             RpcMessage request = new()
             {
@@ -57,7 +57,7 @@ public sealed class IncomingCallsHandlerTests
             };
 
             IncomingCallsHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             JsonElement[] calls = response!.Result!.Value.Deserialize<JsonElement[]>()!;
             calls.Should().HaveCount(1);

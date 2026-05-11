@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class ReferencesHandlerTests
 {
     [Fact]
-    public void ShouldReturnReferencesWhenCursorOnTitleMetadata()
+    public async Task ShouldReturnReferencesWhenCursorOnTitleMetadata()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-references-title").FullName;
         try
@@ -23,8 +23,8 @@ public sealed class ReferencesHandlerTests
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
 
             LanguageServerState state = new();
-            state.UpdateDocument(targetUri);
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(targetUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -42,7 +42,7 @@ public sealed class ReferencesHandlerTests
             };
 
             ReferencesHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             Location[]? locations = result.Deserialize<Location[]>();
 
@@ -59,7 +59,7 @@ public sealed class ReferencesHandlerTests
     }
 
     [Fact]
-    public void ShouldReturnEmptyArrayWhenNoReferenceTargetFound()
+    public async Task ShouldReturnEmptyArrayWhenNoReferenceTargetFound()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-references-empty").FullName;
         try
@@ -69,7 +69,7 @@ public sealed class ReferencesHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -87,7 +87,7 @@ public sealed class ReferencesHandlerTests
             };
 
             ReferencesHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             Location[]? locations = result.Deserialize<Location[]>();
 

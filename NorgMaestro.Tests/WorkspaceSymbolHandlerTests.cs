@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class WorkspaceSymbolHandlerTests
 {
     [Fact]
-    public void ShouldFilterByQueryCaseInsensitive()
+    public async Task ShouldFilterByQueryCaseInsensitive()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-ws-symbol").FullName;
         try
@@ -20,11 +20,11 @@ public sealed class WorkspaceSymbolHandlerTests
             File.WriteAllText(betaPath, "@document.meta\ntitle: Beta Note\n@end\n");
 
             LanguageServerState state = new();
-            state.UpdateDocument(new Uri(Path.GetFullPath(alphaPath)));
-            state.UpdateDocument(new Uri(Path.GetFullPath(betaPath)));
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(alphaPath)));
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(betaPath)));
 
             WorkspaceSymbolHandler handler = new(state, CreateRequest("alpha", 31));
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
             JsonElement[] items = response!.Result!.Value.Deserialize<JsonElement[]>()!;
 
             items.Should().HaveCount(1);
@@ -37,7 +37,7 @@ public sealed class WorkspaceSymbolHandlerTests
     }
 
     [Fact]
-    public void ShouldSortWorkspaceSymbolsByName()
+    public async Task ShouldSortWorkspaceSymbolsByName()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-ws-order").FullName;
         try
@@ -48,11 +48,11 @@ public sealed class WorkspaceSymbolHandlerTests
             File.WriteAllText(alphaPath, "@document.meta\ntitle: Alpha\n@end\n");
 
             LanguageServerState state = new();
-            state.UpdateDocument(new Uri(Path.GetFullPath(zetaPath)));
-            state.UpdateDocument(new Uri(Path.GetFullPath(alphaPath)));
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(zetaPath)));
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(alphaPath)));
 
             WorkspaceSymbolHandler handler = new(state, CreateRequest("", 32));
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
             JsonElement[] items = response!.Result!.Value.Deserialize<JsonElement[]>()!;
 
             items.Should().HaveCount(2);

@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class DefinitionHandlerTests
 {
     [Fact]
-    public void ShouldReturnDefinitionLocationForFileLink()
+    public async Task ShouldReturnDefinitionLocationForFileLink()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-definition").FullName;
         try
@@ -30,8 +30,8 @@ public sealed class DefinitionHandlerTests
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
 
             LanguageServerState state = new();
-            state.UpdateDocument(targetUri);
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(targetUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -48,7 +48,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             response.Should().NotBeNull();
             response!.Result.Should().NotBeNull();
@@ -67,7 +67,7 @@ public sealed class DefinitionHandlerTests
     }
 
     [Fact]
-    public void ShouldResolveWorkspaceRelativeLinks()
+    public async Task ShouldResolveWorkspaceRelativeLinks()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-definition-root").FullName;
         try
@@ -85,7 +85,7 @@ public sealed class DefinitionHandlerTests
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
 
             LanguageServerState state = new();
-            state.Initialize(rootUri);
+            await state.Initialize(rootUri);
 
             RpcMessage request = new()
             {
@@ -102,7 +102,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             response.Should().NotBeNull();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
@@ -119,7 +119,7 @@ public sealed class DefinitionHandlerTests
     }
 
     [Fact]
-    public void ShouldResolveNamedWorkspaceLinks()
+    public async Task ShouldResolveNamedWorkspaceLinks()
     {
         string rootDir = Directory.CreateTempSubdirectory("norgmaestro-root").FullName;
         string gtdDir = Directory.CreateTempSubdirectory("norgmaestro-gtd").FullName;
@@ -135,14 +135,14 @@ public sealed class DefinitionHandlerTests
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
 
             LanguageServerState state = new();
-            state.Initialize(
+            await state.Initialize(
                 rootUri,
                 [
                     new WorkspaceFolder() { Name = "main", Uri = rootUri },
                     new WorkspaceFolder() { Name = "gtd", Uri = new Uri(Path.GetFullPath(gtdDir)) }
                 ]
             );
-            state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
+            _ = await state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
 
             RpcMessage request = new()
             {
@@ -159,7 +159,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             response.Should().NotBeNull();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
@@ -176,7 +176,7 @@ public sealed class DefinitionHandlerTests
     }
 
     [Fact]
-    public void ShouldReturnSelfDefinitionWhenCursorOnTitleMetadata()
+    public async Task ShouldReturnSelfDefinitionWhenCursorOnTitleMetadata()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-definition-title").FullName;
         try
@@ -186,7 +186,7 @@ public sealed class DefinitionHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -203,7 +203,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             Location[]? locations = result.Deserialize<Location[]>();
 
@@ -219,7 +219,7 @@ public sealed class DefinitionHandlerTests
     }
 
     [Fact]
-    public void ShouldReturnEmptyArrayWhenNoDefinitionTargetFound()
+    public async Task ShouldReturnEmptyArrayWhenNoDefinitionTargetFound()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-definition-empty").FullName;
         try
@@ -229,7 +229,7 @@ public sealed class DefinitionHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -246,7 +246,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             Location[]? locations = result.Deserialize<Location[]>();
 

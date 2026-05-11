@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class DocumentSymbolHandlerTests
 {
     [Fact]
-    public void ShouldReturnHeadingsAsDocumentSymbols()
+    public async Task ShouldReturnHeadingsAsDocumentSymbols()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-symbols").FullName;
         try
@@ -22,7 +22,7 @@ public sealed class DocumentSymbolHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -33,7 +33,7 @@ public sealed class DocumentSymbolHandlerTests
             };
 
             DocumentSymbolHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             response.Should().NotBeNull();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
@@ -55,7 +55,7 @@ public sealed class DocumentSymbolHandlerTests
     }
 
     [Fact]
-    public void ShouldReturnEmptyArrayForDocumentWithoutHeadings()
+    public async Task ShouldReturnEmptyArrayForDocumentWithoutHeadings()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-symbols-empty").FullName;
         try
@@ -65,7 +65,7 @@ public sealed class DocumentSymbolHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -76,7 +76,7 @@ public sealed class DocumentSymbolHandlerTests
             };
 
             DocumentSymbolHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             DocumentSymbol[]? symbols = result.Deserialize<DocumentSymbol[]>();
@@ -91,7 +91,7 @@ public sealed class DocumentSymbolHandlerTests
     }
 
     [Fact]
-    public void ShouldBuildNestedHierarchyByHeadingDepth()
+    public async Task ShouldBuildNestedHierarchyByHeadingDepth()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-symbols-tree").FullName;
         try
@@ -101,7 +101,7 @@ public sealed class DocumentSymbolHandlerTests
 
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(sourceUri);
 
             RpcMessage request = new()
             {
@@ -112,7 +112,7 @@ public sealed class DocumentSymbolHandlerTests
             };
 
             DocumentSymbolHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             DocumentSymbol[] symbols = result.Deserialize<DocumentSymbol[]>() ?? [];

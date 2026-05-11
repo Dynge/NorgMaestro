@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class OutgoingCallsHandlerTests
 {
     [Fact]
-    public void ShouldReturnOutgoingCallsFromCurrentDocumentLinks()
+    public async Task ShouldReturnOutgoingCallsFromCurrentDocumentLinks()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-outgoing").FullName;
         try
@@ -22,8 +22,8 @@ public sealed class OutgoingCallsHandlerTests
             Uri sourceUri = new(Path.GetFullPath(sourcePath));
             Uri targetUri = new(Path.GetFullPath(targetPath));
             LanguageServerState state = new();
-            state.UpdateDocument(sourceUri);
-            state.UpdateDocument(targetUri);
+            _ = await state.UpdateDocument(sourceUri);
+            _ = await state.UpdateDocument(targetUri);
 
             RpcMessage request = new()
             {
@@ -54,7 +54,7 @@ public sealed class OutgoingCallsHandlerTests
             };
 
             OutgoingCallsHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             OutgoingCallsResponseParams[]? outgoing = result.Deserialize<OutgoingCallsResponseParams[]>();
 

@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class CodeActionHandlerTests
 {
     [Fact]
-    public void ShouldCreateQuickFixForUnresolvedNoteDiagnostics()
+    public async Task ShouldCreateQuickFixForUnresolvedNoteDiagnostics()
     {
         RpcMessage request = new()
         {
@@ -47,7 +47,7 @@ public sealed class CodeActionHandlerTests
         };
 
         CodeActionHandler handler = new(new LanguageServerState(), request);
-        Response? response = handler.HandleRequest().Result;
+        Response? response = await handler.HandleRequest();
         JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
         CodeAction[]? actions = result.Deserialize<CodeAction[]>();
 

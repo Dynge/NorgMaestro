@@ -9,7 +9,7 @@ namespace NorgMaestro.Tests;
 public sealed class PrepareCallHierarchyHandlerTests
 {
     [Fact]
-    public void ShouldReturnFileUriAsAbsoluteUri()
+    public async Task ShouldReturnFileUriAsAbsoluteUri()
     {
         string tempDir = Directory.CreateTempSubdirectory("norgmaestro-prepare-call").FullName;
         try
@@ -19,7 +19,7 @@ public sealed class PrepareCallHierarchyHandlerTests
             Uri noteUri = new(Path.GetFullPath(notePath));
 
             LanguageServerState state = new();
-            state.UpdateDocument(noteUri);
+            _ = await state.UpdateDocument(noteUri);
 
             RpcMessage request = new()
             {
@@ -36,7 +36,7 @@ public sealed class PrepareCallHierarchyHandlerTests
             };
 
             PrepareCallHierarchyHandler handler = new(state, request);
-            Response? response = handler.HandleRequest().Result;
+            Response? response = await handler.HandleRequest();
             JsonElement[] items = response!.Result!.Value.Deserialize<JsonElement[]>()!;
 
             items.Should().HaveCount(1);
