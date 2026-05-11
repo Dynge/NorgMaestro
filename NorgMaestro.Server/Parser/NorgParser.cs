@@ -81,68 +81,9 @@ internal partial class NorgParser : INorgParser
                     break;
 
                 case string when NorgMetaCategories().Matches(line).Count > 0:
-                    List<MetaField> categories = [];
-                    Match match = NorgMetaCategories().Matches(line).First();
-                    uint matchEnd = (uint)(match.Index + match.Length);
-                    if ((int)matchEnd < line.Length && line[(int)matchEnd] == '[')
-                    {
-                        matchEnd++;
-                    }
-
-                    string firstCategoryLine = line[(int)matchEnd..];
-                    uint categoryStart = matchEnd;
-                    uint categoryEnd = categoryStart + (uint)line.Length;
-
-                    if (firstCategoryLine.Trim().Length is not 0)
-                    {
-                        categories.Add(
-                            new()
-                            {
-                                Name = firstCategoryLine,
-                                Range = new()
-                                {
-                                    Start = new() { Line = lineNr, Character = categoryStart },
-                                    End = new() { Line = lineNr, Character = categoryEnd },
-                                },
-                            }
-                        );
-                    }
-
-                    i++;
-                    while (i < content.Length)
-                    {
-                        string categoryLine = content[i];
-                        if (categoryLine.EndsWith(']'))
-                        {
-                            break;
-                        }
-
-                        lineNr = (uint)i;
-                        categoryStart = (uint)categoryLine.TakeWhile(char.IsWhiteSpace).Count();
-                        categoryEnd = (uint)categoryLine.Length;
-                        if (categoryLine.Trim().Length is not 0)
-                        {
-                            categories.Add(
-                                new()
-                                {
-                                    Name = categoryLine,
-                                    Range = new()
-                                    {
-                                        Start = new()
-                                        {
-                                            Line = lineNr,
-                                            Character = categoryStart,
-                                        },
-                                        End = new() { Line = lineNr, Character = categoryEnd },
-                                    },
-                                }
-                            );
-                        }
-
-                        i++;
-                    }
-
-                    metadata = metadata with { Categories = [.. categories] };
+                    ParsedCategories parsedCategories = ParseCategories(content, i, line, lineNr);
+                    metadata = metadata with { Categories = [.. parsedCategories.Categories] };
+                    i = parsedCategories.NextLineIndex;
                     break;
                 case string when NorgMetaCreated().Matches(line).Count > 0:
                     metadata = metadata with
@@ -275,6 +216,79 @@ internal partial class NorgParser : INorgParser
             },
         };
     }
+
+    private static ParsedCategories ParseCategories(
+        IReadOnlyList<string> content,
+        int currentLineIndex,
+        string line,
+        uint lineNr
+    )
+    {
+        List<MetaField> categories = [];
+        Match match = NorgMetaCategories().Matches(line).First();
+        uint matchEnd = (uint)(match.Index + match.Length);
+        if ((int)matchEnd < line.Length && line[(int)matchEnd] == '[')
+        {
+            matchEnd++;
+        }
+
+        string firstCategoryLine = line[(int)matchEnd..];
+        uint categoryStart = matchEnd;
+        uint categoryEnd = categoryStart + (uint)line.Length;
+        if (firstCategoryLine.Trim().Length is not 0)
+        {
+            categories.Add(
+                new()
+                {
+                    Name = firstCategoryLine,
+                    Range = new()
+                    {
+                        Start = new() { Line = lineNr, Character = categoryStart },
+                        End = new() { Line = lineNr, Character = categoryEnd },
+                    },
+                }
+            );
+        }
+
+        int i = currentLineIndex;
+        i++;
+        while (i < content.Count)
+        {
+            string categoryLine = content[i];
+            if (categoryLine.EndsWith(']'))
+            {
+                break;
+            }
+
+            lineNr = (uint)i;
+            categoryStart = (uint)categoryLine.TakeWhile(char.IsWhiteSpace).Count();
+            categoryEnd = (uint)categoryLine.Length;
+            if (categoryLine.Trim().Length is not 0)
+            {
+                categories.Add(
+                    new()
+                    {
+                        Name = categoryLine,
+                        Range = new()
+                        {
+                            Start = new()
+                            {
+                                Line = lineNr,
+                                Character = categoryStart,
+                            },
+                            End = new() { Line = lineNr, Character = categoryEnd },
+                        },
+                    }
+                );
+            }
+
+            i++;
+        }
+
+        return new(categories, i);
+    }
+
+    private readonly record struct ParsedCategories(List<MetaField> Categories, int NextLineIndex);
 }
 
 internal record NorgLink
