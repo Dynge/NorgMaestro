@@ -5,6 +5,7 @@ namespace NorgMaestro.Server.Methods;
 
 public class HoverHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
+    private readonly DocumentLineReader _lineReader = new(state);
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
@@ -12,12 +13,10 @@ public class HoverHandler(LanguageServerState state, RpcMessage request) : IMess
     {
         HoverRequest hoverRequest = HoverRequest.From(_request);
 
-        string? line = FileUtil
-            .ReadRange(
-                hoverRequest.Params.TextDocument.Uri,
-                new() { Start = hoverRequest.Params.Position, End = hoverRequest.Params.Position }
-            )
-            .FirstOrDefault("");
+        string line = _lineReader.GetLine(
+            hoverRequest.Params.TextDocument.Uri,
+            hoverRequest.Params.Position
+        );
 
         NorgLink? link = NorgParser.ParseLink(
             hoverRequest.Params.TextDocument.Uri,

@@ -5,6 +5,7 @@ namespace NorgMaestro.Server.Methods;
 
 public class ReferencesHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
+    private readonly DocumentLineReader _lineReader = new(state);
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
@@ -12,7 +13,10 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
     {
         ReferencesRequest referenceRequest = ReferencesRequest.From(_request);
 
-        string line = GetLine(referenceRequest.Params.TextDocument.Uri, referenceRequest.Params.Position);
+        string line = _lineReader.GetLine(
+            referenceRequest.Params.TextDocument.Uri,
+            referenceRequest.Params.Position
+        );
 
         NorgLink? link = NorgParser.ParseLink(
             referenceRequest.Params.TextDocument.Uri,
@@ -67,25 +71,4 @@ public class ReferencesHandler(LanguageServerState state, RpcMessage request) : 
         );
     }
 
-    private string GetLine(Uri sourceUri, Position position)
-    {
-        if (
-            _state.Documents.TryGetValue(sourceUri, out Document? document)
-            && position.Line < (uint)document.Content.Length
-        )
-        {
-            return document.Content[(int)position.Line];
-        }
-
-        return FileUtil
-            .ReadRange(
-                sourceUri,
-                new()
-                {
-                    Start = position,
-                    End = position,
-                }
-            )
-            .FirstOrDefault("");
-    }
 }

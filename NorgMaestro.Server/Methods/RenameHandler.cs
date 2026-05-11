@@ -5,6 +5,7 @@ namespace NorgMaestro.Server.Methods;
 
 public class RenameHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
+    private readonly DocumentLineReader _lineReader = new(state);
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
@@ -12,12 +13,10 @@ public class RenameHandler(LanguageServerState state, RpcMessage request) : IMes
     {
         RenameRequest renameRequest = RenameRequest.From(_request);
 
-        string line = File.ReadLinesAsync(renameRequest.Params.TextDocument.Uri.AbsolutePath)
-            .ToBlockingEnumerable()
-            .Skip((int)renameRequest.Params.Position.Line)
-            .FirstOrDefault("");
-
-        uint charPos = renameRequest.Params.Position.Character;
+        string line = _lineReader.GetLine(
+            renameRequest.Params.TextDocument.Uri,
+            renameRequest.Params.Position
+        );
         NorgLink? link = NorgParser.ParseLink(
             renameRequest.Params.TextDocument.Uri,
             renameRequest.Params.Position,

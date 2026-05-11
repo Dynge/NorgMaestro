@@ -5,6 +5,7 @@ namespace NorgMaestro.Server.Methods;
 
 public class DefinitionHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
+    private readonly DocumentLineReader _lineReader = new(state);
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
@@ -12,16 +13,10 @@ public class DefinitionHandler(LanguageServerState state, RpcMessage request) : 
     {
         DefinitionRequest definitionRequest = DefinitionRequest.From(_request);
 
-        string line = FileUtil
-            .ReadRange(
-                definitionRequest.Params.TextDocument.Uri,
-                new()
-                {
-                    Start = definitionRequest.Params.Position,
-                    End = definitionRequest.Params.Position
-                }
-            )
-            .FirstOrDefault("");
+        string line = _lineReader.GetLine(
+            definitionRequest.Params.TextDocument.Uri,
+            definitionRequest.Params.Position
+        );
 
         NorgLink? link = NorgParser.ParseLink(
             definitionRequest.Params.TextDocument.Uri,

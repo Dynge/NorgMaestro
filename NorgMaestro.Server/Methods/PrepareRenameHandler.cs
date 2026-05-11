@@ -5,18 +5,17 @@ namespace NorgMaestro.Server.Methods;
 
 public class PrepareRenameHandler(LanguageServerState state, RpcMessage request) : IMessageHandler
 {
+    private readonly DocumentLineReader _lineReader = new(state);
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
     public Task<Response?> HandleRequest()
     {
         PrepareRenameRequest prepareRenameRequest = PrepareRenameRequest.From(_request);
-        string line = FileUtil
-            .ReadRange(
-                prepareRenameRequest.Params.TextDocument.Uri,
-                new() { Start = prepareRenameRequest.Params.Position, End = prepareRenameRequest.Params.Position }
-            )
-            .FirstOrDefault("");
+        string line = _lineReader.GetLine(
+            prepareRenameRequest.Params.TextDocument.Uri,
+            prepareRenameRequest.Params.Position
+        );
 
         NorgLink? link = NorgParser.ParseLink(
             prepareRenameRequest.Params.TextDocument.Uri,
