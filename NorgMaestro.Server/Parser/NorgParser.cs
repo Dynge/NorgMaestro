@@ -64,58 +64,25 @@ internal partial class NorgParser : INorgParser
             switch (line)
             {
                 case string when NorgMetaTitle().Matches(line).Count > 0:
-                    Match match = NorgMetaTitle().Matches(line).First();
-                    uint matchEnd = (uint)(match.Index + match.Length);
-                    metadata = metadata with
-                    {
-                        Title = new()
-                        {
-                            Name = line[(int)matchEnd..],
-                            Range = new()
-                            {
-                                Start = new() { Line = lineNr, Character = matchEnd },
-                                End = new() { Line = lineNr, Character = (uint)line.Length },
-                            },
-                        },
-                    };
+                    metadata = metadata with { Title = ParseScalarMetaField(line, lineNr, NorgMetaTitle()) };
                     break;
                 case string when NorgMetaDescription().Matches(line).Count > 0:
-                    match = NorgMetaDescription().Matches(line).First();
-                    matchEnd = (uint)(match.Index + match.Length);
                     metadata = metadata with
                     {
-                        Description = new()
-                        {
-                            Name = line[(int)matchEnd..],
-                            Range = new()
-                            {
-                                Start = new() { Line = lineNr, Character = matchEnd },
-                                End = new() { Line = lineNr, Character = (uint)line.Length },
-                            },
-                        },
+                        Description = ParseScalarMetaField(line, lineNr, NorgMetaDescription())
                     };
                     break;
                 case string when NorgMetaAuthors().Matches(line).Count > 0:
-                    match = NorgMetaAuthors().Matches(line).First();
-                    matchEnd = (uint)(match.Index + match.Length);
                     metadata = metadata with
                     {
-                        Authors = new()
-                        {
-                            Name = line[(int)matchEnd..],
-                            Range = new()
-                            {
-                                Start = new() { Line = lineNr, Character = matchEnd },
-                                End = new() { Line = lineNr, Character = (uint)line.Length },
-                            },
-                        },
+                        Authors = ParseScalarMetaField(line, lineNr, NorgMetaAuthors())
                     };
                     break;
 
                 case string when NorgMetaCategories().Matches(line).Count > 0:
                     List<MetaField> categories = [];
-                    match = NorgMetaCategories().Matches(line).First();
-                    matchEnd = (uint)(match.Index + match.Length);
+                    Match match = NorgMetaCategories().Matches(line).First();
+                    uint matchEnd = (uint)(match.Index + match.Length);
                     if ((int)matchEnd < line.Length && line[(int)matchEnd] == '[')
                     {
                         matchEnd++;
@@ -171,51 +138,21 @@ internal partial class NorgParser : INorgParser
                     metadata = metadata with { Categories = [.. categories] };
                     break;
                 case string when NorgMetaCreated().Matches(line).Count > 0:
-                    match = NorgMetaCreated().Matches(line).First();
-                    matchEnd = (uint)(match.Index + match.Length);
                     metadata = metadata with
                     {
-                        Created = new()
-                        {
-                            Name = line[(int)matchEnd..],
-                            Range = new()
-                            {
-                                Start = new() { Line = lineNr, Character = matchEnd },
-                                End = new() { Line = lineNr, Character = (uint)line.Length },
-                            },
-                        },
+                        Created = ParseScalarMetaField(line, lineNr, NorgMetaCreated())
                     };
                     break;
                 case string when NorgMetaUpdated().Matches(line).Count > 0:
-                    match = NorgMetaUpdated().Matches(line).First();
-                    matchEnd = (uint)(match.Index + match.Length);
                     metadata = metadata with
                     {
-                        Updated = new()
-                        {
-                            Name = line[(int)matchEnd..],
-                            Range = new()
-                            {
-                                Start = new() { Line = lineNr, Character = matchEnd },
-                                End = new() { Line = lineNr, Character = (uint)line.Length },
-                            },
-                        },
+                        Updated = ParseScalarMetaField(line, lineNr, NorgMetaUpdated())
                     };
                     break;
                 case string when NorgMetaVersion().Matches(line).Count > 0:
-                    match = NorgMetaVersion().Matches(line).First();
-                    matchEnd = (uint)(match.Index + match.Length);
                     metadata = metadata with
                     {
-                        Version = new()
-                        {
-                            Name = line[(int)matchEnd..],
-                            Range = new()
-                            {
-                                Start = new() { Line = lineNr, Character = matchEnd },
-                                End = new() { Line = lineNr, Character = (uint)line.Length },
-                            },
-                        },
+                        Version = ParseScalarMetaField(line, lineNr, NorgMetaVersion())
                     };
                     break;
 
@@ -322,6 +259,21 @@ internal partial class NorgParser : INorgParser
 
     [GeneratedRegex(@"^version: ?")]
     private static partial Regex NorgMetaVersion();
+
+    private static MetaField ParseScalarMetaField(string line, uint lineNr, Regex regex)
+    {
+        Match match = regex.Matches(line).First();
+        uint matchEnd = (uint)(match.Index + match.Length);
+        return new()
+        {
+            Name = line[(int)matchEnd..],
+            Range = new()
+            {
+                Start = new() { Line = lineNr, Character = matchEnd },
+                End = new() { Line = lineNr, Character = (uint)line.Length },
+            },
+        };
+    }
 }
 
 internal record NorgLink
