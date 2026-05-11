@@ -1,0 +1,4 @@
+- Make link relative to workspace does not work. Wants to make it /home/dynge/notes
+- Extract visual code action only work on single line selection
+
+
