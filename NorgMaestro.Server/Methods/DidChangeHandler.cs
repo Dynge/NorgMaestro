@@ -9,13 +9,13 @@ public class DidChangeHandler(LanguageServerState state, IRpcWriter writer, RpcM
     private readonly LanguageServerState _state = state;
     private readonly IRpcWriter _writer = writer;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         DidChangeNotification didChangeNotification = DidChangeNotification.From(_request);
         Uri uri = didChangeNotification.Params.TextDocument.Uri;
         if (_state.Documents.TryGetValue(uri, out Document? document) is false)
         {
-            return null;
+            return Task.FromResult<Response?>(null);
         }
 
         string contentText = string.Join('\n', document.Content);
@@ -27,7 +27,7 @@ public class DidChangeHandler(LanguageServerState state, IRpcWriter writer, RpcM
         string[] content = NormalizeLines(contentText);
         _ = _state.UpdateDocument(uri, content);
         PublishDiagnostics();
-        return null;
+        return Task.FromResult<Response?>(null);
     }
 
     private static string ApplyChange(string source, TextDocumentContentChangeEvent change)

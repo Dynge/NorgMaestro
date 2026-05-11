@@ -33,7 +33,7 @@ public class HoverHandler(LanguageServerState state, RpcMessage request) : IMess
         Uri targetUri = _state.ResolveLinkUri(link);
         if (_state.Documents.TryGetValue(targetUri, out Document? targetDoc) is false)
         {
-            return Response.OfSuccess(hoverRequest.Id);
+            return Task.FromResult<Response?>(Response.OfSuccess(hoverRequest.Id));
         }
 
         var previewRange = new TextRange()

@@ -8,12 +8,14 @@ public class DocumentLinkHandler(LanguageServerState state, RpcMessage request) 
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         DocumentLinkRequest linkRequest = DocumentLinkRequest.From(_request);
         if (_state.Documents.TryGetValue(linkRequest.Params.TextDocument.Uri, out Document? doc) is false)
         {
-            return Response.OfSuccess(linkRequest.Id, Array.Empty<DocumentLink>());
+            return Task.FromResult<Response?>(
+                Response.OfSuccess(linkRequest.Id, Array.Empty<DocumentLink>())
+            );
         }
 
         DocumentLink[] links = NorgParser
@@ -26,6 +28,6 @@ public class DocumentLinkHandler(LanguageServerState state, RpcMessage request) 
             })
             .ToArray();
 
-        return Response.OfSuccess(linkRequest.Id, links);
+        return Task.FromResult<Response?>(Response.OfSuccess(linkRequest.Id, links));
     }
 }

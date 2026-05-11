@@ -40,15 +40,15 @@ public sealed class RpcReaderTests
     }
 
     [Fact]
-    public void ShouldDecodeUtf8BodyUsingByteLength()
+    public async Task ShouldDecodeUtf8BodyUsingByteLength()
     {
         const string body =
             "{\"jsonrpc\":\"2.0\",\"id\":1,\"method\":\"initialize\",\"params\":{\"rootUri\":\"file:///tmp/caf%C3%A9\"}}";
         int contentLength = Encoding.UTF8.GetByteCount(body);
         string data = $"Content-Length: {contentLength}\r\n\r\n{body}";
-        SendToStream(data);
+        await SendToStream(data);
 
-        var decodedMessage = _reader.Decode();
+        var decodedMessage = await _reader.DecodeAsync();
         if (decodedMessage is null)
         {
             Assert.Fail("decodedMessage is null");

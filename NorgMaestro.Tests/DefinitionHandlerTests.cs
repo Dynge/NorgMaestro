@@ -48,7 +48,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             response.Should().NotBeNull();
             response!.Result.Should().NotBeNull();
@@ -102,7 +102,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             response.Should().NotBeNull();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
@@ -159,7 +159,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             response.Should().NotBeNull();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
@@ -203,7 +203,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             Location[]? locations = result.Deserialize<Location[]>();
 
@@ -246,7 +246,7 @@ public sealed class DefinitionHandlerTests
             };
 
             DefinitionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             Location[]? locations = result.Deserialize<Location[]>();
 

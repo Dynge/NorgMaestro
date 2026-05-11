@@ -22,7 +22,7 @@ public sealed class HoverHandlerTests
             RpcMessage request = CreateHoverRequest(sourcePath, 0, 8, 1);
 
             HoverHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             response.Should().NotBeNull();
             response!.Result.Should().NotBeNull();
@@ -51,7 +51,7 @@ public sealed class HoverHandlerTests
             RpcMessage request = CreateHoverRequest(sourcePath, 0, 8, 2);
 
             HoverHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             response.Should().NotBeNull();
             response!.Result.Should().NotBeNull();

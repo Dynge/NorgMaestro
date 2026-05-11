@@ -25,14 +25,14 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request) : 
             return completionRequestParams.CompletionContext?.TriggerCharacter == '{';
         }
 
-        int lineIndex = (int)completionRequestParams.Postion.Line;
+        int lineIndex = (int)completionRequestParams.Position.Line;
         if (lineIndex < 0 || lineIndex >= doc.Content.Length)
         {
             return completionRequestParams.CompletionContext?.TriggerCharacter == '{';
         }
 
         string line = doc.Content[lineIndex];
-        int cursor = (int)completionRequestParams.Postion.Character;
+        int cursor = (int)completionRequestParams.Position.Character;
         if (cursor < 0 || cursor > line.Length)
         {
             return completionRequestParams.CompletionContext?.TriggerCharacter == '{';
@@ -103,20 +103,20 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request) : 
                 {
                     Start = new()
                     {
-                        Character = completionRequestParams.Postion.Character - 1,
-                        Line = completionRequestParams.Postion.Line,
+                        Character = completionRequestParams.Position.Character - 1,
+                        Line = completionRequestParams.Position.Line,
                     },
                     End = new()
                     {
-                        Line = completionRequestParams.Postion.Line,
-                        Character = completionRequestParams.Postion.Character,
+                        Line = completionRequestParams.Position.Line,
+                        Character = completionRequestParams.Position.Character,
                     },
                 },
                 NewText = string.Empty,
             };
         }
 
-        int lineIndex = (int)completionRequestParams.Postion.Line;
+        int lineIndex = (int)completionRequestParams.Position.Line;
         if (lineIndex < 0 || lineIndex >= doc.Content.Length)
         {
             return new()
@@ -125,13 +125,13 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request) : 
                 {
                     Start = new()
                     {
-                        Character = completionRequestParams.Postion.Character - 1,
-                        Line = completionRequestParams.Postion.Line,
+                        Character = completionRequestParams.Position.Character - 1,
+                        Line = completionRequestParams.Position.Line,
                     },
                     End = new()
                     {
-                        Line = completionRequestParams.Postion.Line,
-                        Character = completionRequestParams.Postion.Character,
+                        Line = completionRequestParams.Position.Line,
+                        Character = completionRequestParams.Position.Character,
                     },
                 },
                 NewText = string.Empty,
@@ -139,7 +139,7 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request) : 
         }
 
         string line = doc.Content[lineIndex];
-        int cursor = Math.Clamp((int)completionRequestParams.Postion.Character, 0, line.Length);
+        int cursor = Math.Clamp((int)completionRequestParams.Position.Character, 0, line.Length);
         int openBrace = line.LastIndexOf('{', cursor == 0 ? 0 : cursor - 1);
         int closeBrace = openBrace >= 0 ? line.IndexOf('}', openBrace) : -1;
         if (openBrace < 0 || closeBrace < 0)
@@ -150,13 +150,13 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request) : 
                 {
                     Start = new()
                     {
-                        Character = completionRequestParams.Postion.Character - 1,
-                        Line = completionRequestParams.Postion.Line,
+                        Character = completionRequestParams.Position.Character - 1,
+                        Line = completionRequestParams.Position.Line,
                     },
                     End = new()
                     {
-                        Line = completionRequestParams.Postion.Line,
-                        Character = completionRequestParams.Postion.Character,
+                        Line = completionRequestParams.Position.Line,
+                        Character = completionRequestParams.Position.Character,
                     },
                 },
                 NewText = string.Empty,
@@ -177,8 +177,8 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request) : 
         {
             Range = new()
             {
-                Start = new() { Line = completionRequestParams.Postion.Line, Character = (uint)openBrace },
-                End = new() { Line = completionRequestParams.Postion.Line, Character = (uint)end },
+                Start = new() { Line = completionRequestParams.Position.Line, Character = (uint)openBrace },
+                End = new() { Line = completionRequestParams.Position.Line, Character = (uint)end },
             },
             NewText = string.Empty,
         };

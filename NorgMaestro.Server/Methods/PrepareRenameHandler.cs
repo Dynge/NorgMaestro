@@ -8,7 +8,7 @@ public class PrepareRenameHandler(LanguageServerState state, RpcMessage request)
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         PrepareRenameRequest prepareRenameRequest = PrepareRenameRequest.From(_request);
         string line = FileUtil
@@ -30,16 +30,18 @@ public class PrepareRenameHandler(LanguageServerState state, RpcMessage request)
                 && _state.Documents.TryGetValue(titleTarget, out Document? doc)
                 && doc.Metadata.Title is not null)
             {
-                return Response.OfSuccess(prepareRenameRequest.Id, doc.Metadata.Title.Range);
+                return Task.FromResult<Response?>(
+                    Response.OfSuccess(prepareRenameRequest.Id, doc.Metadata.Title.Range)
+                );
             }
 
-            return Response.OfSuccess(prepareRenameRequest.Id);
+            return Task.FromResult<Response?>(Response.OfSuccess(prepareRenameRequest.Id));
         }
 
         TextRange range = IsWithinRange(prepareRenameRequest.Params.Position, link.FileRange)
             ? link.FileRange
             : link.LinkTextRange;
-        return Response.OfSuccess(prepareRenameRequest.Id, range);
+        return Task.FromResult<Response?>(Response.OfSuccess(prepareRenameRequest.Id, range));
     }
 
     private static bool IsWithinRange(Position position, TextRange range)

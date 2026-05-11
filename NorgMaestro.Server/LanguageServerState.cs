@@ -21,10 +21,10 @@ public class LanguageServerState
 
     public async Task Initialize(Uri rootUri, IEnumerable<WorkspaceFolder>? workspaceFolders = null)
     {
-        Initialize(rootUri, workspaceFolders, null);
+        await Initialize(rootUri, workspaceFolders, null);
     }
 
-    public void Initialize(
+    public async Task Initialize(
         Uri rootUri,
         IEnumerable<WorkspaceFolder>? workspaceFolders,
         InitializationOptions? initializationOptions
@@ -55,7 +55,7 @@ public class LanguageServerState
     public async Task<Document?> UpdateDocument(Uri fileUri)
     {
         string[] content = File.ReadAllLines(fileUri.LocalPath);
-        return UpdateDocument(fileUri, content);
+        return await UpdateDocument(fileUri, content);
     }
 
     public async Task<Document?> UpdateDocument(Uri fileUri, string[] content)

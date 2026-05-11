@@ -4,5 +4,5 @@ namespace NorgMaestro.Server.Methods;
 
 public interface IHandlerResolver
 {
-    bool TryHandleRequest(RpcMessage req);
+    Task<bool> TryHandleRequest(RpcMessage req);
 }

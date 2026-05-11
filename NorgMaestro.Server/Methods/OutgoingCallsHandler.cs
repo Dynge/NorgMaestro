@@ -8,13 +8,15 @@ public class OutgoingCallsHandler(LanguageServerState state, RpcMessage request)
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         OutgoingCallsRequest outgoingRequest = OutgoingCallsRequest.From(_request);
         Uri sourceUri = new(outgoingRequest.Params.Item.Uri);
         if (_state.Documents.TryGetValue(sourceUri, out Document? doc) is false)
         {
-            return Response.OfSuccess(outgoingRequest.Id, new List<OutgoingCallsResponseParams>());
+            return Task.FromResult<Response?>(
+                Response.OfSuccess(outgoingRequest.Id, new List<OutgoingCallsResponseParams>())
+            );
         }
 
         List<OutgoingCallsResponseParams> outgoingCalls = [];
@@ -52,6 +54,6 @@ public class OutgoingCallsHandler(LanguageServerState state, RpcMessage request)
             );
         }
 
-        return Response.OfSuccess(outgoingRequest.Id, outgoingCalls);
+        return Task.FromResult<Response?>(Response.OfSuccess(outgoingRequest.Id, outgoingCalls));
     }
 }

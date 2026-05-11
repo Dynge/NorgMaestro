@@ -24,7 +24,7 @@ public sealed class WorkspaceSymbolHandlerTests
             state.UpdateDocument(new Uri(Path.GetFullPath(betaPath)));
 
             WorkspaceSymbolHandler handler = new(state, CreateRequest("alpha", 31));
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
             JsonElement[] items = response!.Result!.Value.Deserialize<JsonElement[]>()!;
 
             items.Should().HaveCount(1);
@@ -52,7 +52,7 @@ public sealed class WorkspaceSymbolHandlerTests
             state.UpdateDocument(new Uri(Path.GetFullPath(alphaPath)));
 
             WorkspaceSymbolHandler handler = new(state, CreateRequest("", 32));
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
             JsonElement[] items = response!.Result!.Value.Deserialize<JsonElement[]>()!;
 
             items.Should().HaveCount(2);

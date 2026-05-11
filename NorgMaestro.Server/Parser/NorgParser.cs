@@ -23,7 +23,7 @@ public record MetaField
 
 internal interface INorgParser
 {
-    public static abstract async Task<NeorgMetadata> GetMetadata(Uri fileUri);
+    public static abstract Task<NeorgMetadata> GetMetadata(Uri fileUri);
     public static abstract Dictionary<Uri, HashSet<ReferenceLocation>> GetReferences(
         Uri fileUri,
         string[] content
@@ -37,15 +37,15 @@ internal partial class NorgParser : INorgParser
     public static async Task<NeorgMetadata> GetMetadata(Uri fileUri)
     {
         string[] content = File.ReadAllLines(fileUri.LocalPath);
-        return GetMetadata(fileUri, content);
+        return await GetMetadata(fileUri, content);
     }
 
-    public static NeorgMetadata GetMetadata(Uri fileUri, string[] content)
+    public static async Task<NeorgMetadata> GetMetadata(Uri fileUri, string[] content)
     {
         NeorgMetadata metadata = new() { FileUri = fileUri };
 
         using StringReader streamReader = new(string.Join('\n', content));
-        string? line = await streamReader.ReadLineAsync()?.Trim();
+        string? line = (await streamReader.ReadLineAsync())?.Trim();
         bool? insideMetadata = null;
         uint lineNr = 0;
         while (line is not null)

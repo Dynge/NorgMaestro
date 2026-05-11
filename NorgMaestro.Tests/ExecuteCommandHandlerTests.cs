@@ -120,7 +120,7 @@ public sealed class ExecuteCommandHandlerTests
         };
 
         ExecuteCommandHandler handler = new(state, writer, request);
-        Response? response = handler.HandleRequest();
+        Response? response = handler.HandleRequest().Result;
 
         response.Should().NotBeNull();
         response!.Error.Should().NotBeNull();
@@ -134,9 +134,10 @@ public sealed class ExecuteCommandHandlerTests
     {
         public int WriteCount { get; private set; }
 
-        public void EncodeAndWrite(object o)
+        public Task EncodeAndWrite(object o)
         {
             WriteCount++;
+            return Task.CompletedTask;
         }
     }
 }

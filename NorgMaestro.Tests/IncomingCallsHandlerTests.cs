@@ -57,7 +57,7 @@ public sealed class IncomingCallsHandlerTests
             };
 
             IncomingCallsHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             JsonElement[] calls = response!.Result!.Value.Deserialize<JsonElement[]>()!;
             calls.Should().HaveCount(1);

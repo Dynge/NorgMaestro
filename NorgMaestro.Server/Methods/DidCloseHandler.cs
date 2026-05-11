@@ -9,12 +9,12 @@ public class DidCloseHandler(LanguageServerState state, IRpcWriter writer, RpcMe
     private readonly LanguageServerState _state = state;
     private readonly IRpcWriter _writer = writer;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         DidCloseNotification didCloseNotification = DidCloseNotification.From(_request);
         _state.RemoveDocument(didCloseNotification.Params.TextDocument.Uri);
         PublishDiagnostics();
-        return null;
+        return Task.FromResult<Response?>(null);
     }
 
     private void PublishDiagnostics()

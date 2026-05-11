@@ -10,39 +10,39 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
     private readonly LanguageServerState _state = state;
     private readonly IRpcWriter _writer = writer;
 
-    public Response? HandleRequest()
+    public async Task<Response?> HandleRequest()
     {
         ExecuteCommandRequest executeRequest = ExecuteCommandRequest.From(_request);
         bool handled = true;
         switch (executeRequest.Params.Command)
         {
             case CodeActionHandler.CreateNoteCommand:
-                CreateMissingNote(executeRequest.Params.Arguments);
-                PublishDiagnostics();
+                _ = await CreateMissingNote(executeRequest.Params.Arguments);
+                await PublishDiagnostics();
                 break;
             case CodeActionHandler.CreateNoteAndOpenCommand:
-                string? created = CreateMissingNote(executeRequest.Params.Arguments);
+                string? created = await CreateMissingNote(executeRequest.Params.Arguments);
                 if (string.IsNullOrWhiteSpace(created) is false)
                 {
-                    ShowDocument(created!);
+                    await ShowDocument(created!);
                 }
-                PublishDiagnostics();
+                await PublishDiagnostics();
                 break;
             case CodeActionHandler.CreateBacklinkSectionCommand:
-                CreateBacklinkSection(executeRequest.Params.Arguments);
-                PublishDiagnostics();
+                await CreateBacklinkSection(executeRequest.Params.Arguments);
+                await PublishDiagnostics();
                 break;
             case CodeActionHandler.ExtractSelectionToNoteCommand:
-                ExtractSelectionToNewNote(executeRequest.Params.Arguments);
-                PublishDiagnostics();
+                await ExtractSelectionToNewNote(executeRequest.Params.Arguments);
+                await PublishDiagnostics();
                 break;
             case CodeActionHandler.MoveNoteToWorkspaceCommand:
-                MoveNoteToWorkspace(executeRequest.Params.Arguments);
-                PublishDiagnostics();
+                await MoveNoteToWorkspace(executeRequest.Params.Arguments);
+                await PublishDiagnostics();
                 break;
             case CodeActionHandler.CreateNoteFromLinkTextCommand:
-                CreateNoteFromLinkText(executeRequest.Params.Arguments);
-                PublishDiagnostics();
+                await CreateNoteFromLinkText(executeRequest.Params.Arguments);
+                await PublishDiagnostics();
                 break;
             default:
                 handled = false;
@@ -51,22 +51,23 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
 
         if (handled is false)
         {
-            return executeRequest.Id is int id
-                ? Response.OfError(
-                    id,
-                    new
-                    {
-                        code = -32601,
-                        message = $"Unknown command: {executeRequest.Params.Command}"
-                    }
-                )
-                : null;
+            return
+                executeRequest.Id is int id
+                    ? Response.OfError(
+                        id,
+                        new
+                        {
+                            code = -32601,
+                            message = $"Unknown command: {executeRequest.Params.Command}"
+                        }
+                    )
+                    : null;
         }
 
         return executeRequest.Id is int requestId ? Response.OfSuccess(requestId) : null;
     }
 
-    private string? CreateMissingNote(JsonElement[]? arguments)
+    private async Task<string?> CreateMissingNote(JsonElement[]? arguments)
     {
         string? targetPath = arguments?.FirstOrDefault().GetString();
         if (string.IsNullOrWhiteSpace(targetPath))
@@ -87,13 +88,13 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
 
         string noteId = Path.GetFileNameWithoutExtension(targetPath);
         File.WriteAllText(targetPath, $"@document.meta\ntitle: {noteId}\n@end\n");
-        _state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
+        _ = await _state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
         return targetPath;
     }
 
-    private void ShowDocument(string path)
+    private async Task ShowDocument(string path)
     {
-        _writer.EncodeAndWrite(
+        await _writer.EncodeAndWrite(
             new RpcNotification<ShowDocumentParams>
             {
                 JsonRpc = "2.0",
@@ -103,7 +104,7 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
         );
     }
 
-    private void CreateBacklinkSection(JsonElement[]? arguments)
+    private async Task CreateBacklinkSection(JsonElement[]? arguments)
     {
         string? sourcePath = arguments?.ElementAtOrDefault(0).GetString();
         string? targetPath = arguments?.ElementAtOrDefault(1).GetString();
@@ -130,10 +131,10 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
         }
 
         File.AppendAllText(targetPath, backlink);
-        _state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
+        _ = await _state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
     }
 
-    private void ExtractSelectionToNewNote(JsonElement[]? arguments)
+    private async Task ExtractSelectionToNewNote(JsonElement[]? arguments)
     {
         string? sourcePath = arguments?.ElementAtOrDefault(0).GetString();
         uint startLine = arguments?.ElementAtOrDefault(1).GetUInt32() ?? 0;
@@ -163,11 +164,11 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
         lines[startLine] = line[..(int)startChar] + $"{{:{noteId}:}}[{selected}]" + line[(int)endChar..];
         File.WriteAllLines(sourcePath, lines);
 
-        _state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
-        _state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
+        _ = await _state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
+        _ = await _state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
     }
 
-    private void MoveNoteToWorkspace(JsonElement[]? arguments)
+    private async Task MoveNoteToWorkspace(JsonElement[]? arguments)
     {
         string? sourcePath = arguments?.ElementAtOrDefault(0).GetString();
         string? workspaceName = arguments?.ElementAtOrDefault(1).GetString();
@@ -176,7 +177,7 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
             return;
         }
 
-        if (_state.Workspaces.TryGetValue(workspaceName, out Uri workspaceUri) is false)
+        if (_state.Workspaces.TryGetValue(workspaceName, out Uri? workspaceUri) is false)
         {
             return;
         }
@@ -190,10 +191,10 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
         string destinationPath = Path.Combine(workspaceUri.LocalPath, fileName);
         Directory.CreateDirectory(workspaceUri.LocalPath);
         File.Move(sourcePath, destinationPath, true);
-        _state.UpdateDocument(new Uri(Path.GetFullPath(destinationPath)));
+        _ = await _state.UpdateDocument(new Uri(Path.GetFullPath(destinationPath)));
     }
 
-    private void CreateNoteFromLinkText(JsonElement[]? arguments)
+    private async Task CreateNoteFromLinkText(JsonElement[]? arguments)
     {
         string? sourcePath = arguments?.ElementAtOrDefault(0).GetString();
         uint lineNr = arguments?.ElementAtOrDefault(1).GetUInt32() ?? 0;
@@ -224,18 +225,18 @@ public class ExecuteCommandHandler(LanguageServerState state, IRpcWriter writer,
             }
         }
 
-        _state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
-        _state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
-        ShowDocument(targetPath);
+        _ = await _state.UpdateDocument(new Uri(Path.GetFullPath(sourcePath)));
+        _ = await _state.UpdateDocument(new Uri(Path.GetFullPath(targetPath)));
+        await ShowDocument(targetPath);
     }
 
-    private void PublishDiagnostics()
+    private async Task PublishDiagnostics()
     {
         Dictionary<Uri, Diagnostic[]> diagnosticsByFile = _state.GetDiagnostics();
         foreach (Document document in _state.Documents.Values)
         {
             Diagnostic[] diagnostics = diagnosticsByFile.GetValueOrDefault(document.Uri, []);
-            _writer.EncodeAndWrite(
+            await _writer.EncodeAndWrite(
                 Notification.PublishDiagnostics(
                     new() { Uri = document.Uri.AbsoluteUri, Diagnostics = diagnostics }
                 )

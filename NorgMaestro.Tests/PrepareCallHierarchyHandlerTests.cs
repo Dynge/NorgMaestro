@@ -36,7 +36,7 @@ public sealed class PrepareCallHierarchyHandlerTests
             };
 
             PrepareCallHierarchyHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
             JsonElement[] items = response!.Result!.Value.Deserialize<JsonElement[]>()!;
 
             items.Should().HaveCount(1);

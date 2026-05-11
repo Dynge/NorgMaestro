@@ -8,7 +8,7 @@ public class DefinitionHandler(LanguageServerState state, RpcMessage request) : 
     private readonly RpcMessage _request = request;
     private readonly LanguageServerState _state = state;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         DefinitionRequest definitionRequest = DefinitionRequest.From(_request);
 
@@ -40,12 +40,16 @@ public class DefinitionHandler(LanguageServerState state, RpcMessage request) : 
         }
         else
         {
-            return Response.OfSuccess(definitionRequest.Id, Array.Empty<Location>());
+            return Task.FromResult<Response?>(
+                Response.OfSuccess(definitionRequest.Id, Array.Empty<Location>())
+            );
         }
 
         if (_state.Documents.TryGetValue(targetUri, out Document? doc) is false)
         {
-            return Response.OfSuccess(definitionRequest.Id, Array.Empty<Location>());
+            return Task.FromResult<Response?>(
+                Response.OfSuccess(definitionRequest.Id, Array.Empty<Location>())
+            );
         }
 
         TextRange targetRange = doc.Metadata.Title?.Range
@@ -56,6 +60,6 @@ public class DefinitionHandler(LanguageServerState state, RpcMessage request) : 
             };
 
         Location location = new() { Uri = doc.Uri.AbsoluteUri, Range = targetRange };
-        return Response.OfSuccess(definitionRequest.Id, new[] { location });
+        return Task.FromResult<Response?>(Response.OfSuccess(definitionRequest.Id, new[] { location }));
     }
 }

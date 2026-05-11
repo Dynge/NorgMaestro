@@ -33,7 +33,7 @@ public sealed class DocumentLinkHandlerTests
             };
 
             DocumentLinkHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             DocumentLink[]? links = result.Deserialize<DocumentLink[]>();

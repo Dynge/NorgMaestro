@@ -25,14 +25,12 @@ internal sealed class NeorgLspServer(IRpcReader reader, IHandlerResolver handler
     {
         try
         {
-            var didSucceed = _handlerResolver.TryHandleRequest(req);
+            var didSucceed = await _handlerResolver.TryHandleRequest(req);
             if (!didSucceed) { }
         }
         catch (InvalidDataException)
         {
             return;
         }
-
-        await Task.CompletedTask;
     }
 }

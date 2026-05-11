@@ -33,7 +33,7 @@ public sealed class DocumentSymbolHandlerTests
             };
 
             DocumentSymbolHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             response.Should().NotBeNull();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
@@ -76,7 +76,7 @@ public sealed class DocumentSymbolHandlerTests
             };
 
             DocumentSymbolHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             DocumentSymbol[]? symbols = result.Deserialize<DocumentSymbol[]>();
@@ -112,7 +112,7 @@ public sealed class DocumentSymbolHandlerTests
             };
 
             DocumentSymbolHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             DocumentSymbol[] symbols = result.Deserialize<DocumentSymbol[]>() ?? [];

@@ -41,7 +41,7 @@ public sealed class CompletionHandlerTests
             };
 
             CompletionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             CompletionItem[]? items = result.Deserialize<CompletionItem[]>();
@@ -92,7 +92,7 @@ public sealed class CompletionHandlerTests
             };
 
             CompletionHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             CompletionItem[]? items = result.Deserialize<CompletionItem[]>();

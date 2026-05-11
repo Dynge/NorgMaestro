@@ -179,9 +179,10 @@ public sealed class DidOpenHandlerTests
     {
         public int WriteCount { get; private set; }
 
-        public void EncodeAndWrite(object o)
+        public Task EncodeAndWrite(object o)
         {
             WriteCount++;
+            return Task.CompletedTask;
         }
     }
 }

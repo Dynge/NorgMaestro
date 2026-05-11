@@ -13,12 +13,12 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
     {
         InitializeRequest initRequest = InitializeRequest.From(_request);
         Uri rootUri = ResolveRootUri(initRequest.Params);
-        _state.Initialize(
+        await _state.Initialize(
             rootUri,
             initRequest.Params.WorkspaceFolders,
             initRequest.Params.InitializationOptions
         );
-        PublishDiagnostics();
+        await PublishDiagnostics();
         InitializeResultParams res = new()
         {
             Capabilities = new()
@@ -79,13 +79,13 @@ public class InitializeHandler(LanguageServerState state, IRpcWriter writer, Rpc
         return new Uri(Path.GetFullPath(AppContext.BaseDirectory));
     }
 
-    private void PublishDiagnostics()
+    private async Task PublishDiagnostics()
     {
         Dictionary<Uri, Diagnostic[]> diagnosticsByFile = _state.GetDiagnostics();
         foreach (Document document in _state.Documents.Values)
         {
             Diagnostic[] diagnostics = diagnosticsByFile.GetValueOrDefault(document.Uri, []);
-            _writer.EncodeAndWrite(
+            await _writer.EncodeAndWrite(
                 Notification.PublishDiagnostics(
                     new() { Uri = document.Uri.AbsoluteUri, Diagnostics = diagnostics }
                 )

@@ -9,7 +9,7 @@ public class DidOpenHandler(LanguageServerState state, IRpcWriter writer, RpcMes
     private readonly LanguageServerState _state = state;
     private readonly IRpcWriter _writer = writer;
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         DidOpenNotification didOpenNotification = DidOpenNotification.From(_request);
         Uri uri = didOpenNotification.Params.TextDocument.Uri;
@@ -25,7 +25,7 @@ public class DidOpenHandler(LanguageServerState state, IRpcWriter writer, RpcMes
             _ = _state.UpdateDocument(uri);
         }
         PublishDiagnostics();
-        return null;
+        return Task.FromResult<Response?>(null);
     }
 
     private void PublishDiagnostics()

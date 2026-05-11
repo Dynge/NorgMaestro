@@ -17,7 +17,7 @@ public class CodeActionHandler(LanguageServerState state, RpcMessage request) : 
     public const string MoveNoteToWorkspaceCommand = "norgmaestro.moveNoteToWorkspace";
     public const string CreateNoteFromLinkTextCommand = "norgmaestro.createNoteFromLinkText";
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         CodeActionRequest request = CodeActionRequest.From(_request);
         Uri sourceUri = request.Params.TextDocument.Uri;
@@ -40,6 +40,6 @@ public class CodeActionHandler(LanguageServerState state, RpcMessage request) : 
         };
 
         CodeAction[] actions = _factory.Build(context);
-        return Response.OfSuccess(request.Id, actions);
+        return Task.FromResult<Response?>(Response.OfSuccess(request.Id, actions));
     }
 }

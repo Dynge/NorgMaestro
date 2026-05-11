@@ -12,12 +12,14 @@ public partial class DocumentSymbolHandler(LanguageServerState state, RpcMessage
     [GeneratedRegex(@"^(?<stars>\*+)\s+(?<name>.+)$")]
     private static partial Regex HeadingRegex();
 
-    public Response? HandleRequest()
+    public Task<Response?> HandleRequest()
     {
         DocumentSymbolRequest symbolRequest = DocumentSymbolRequest.From(_request);
         if (_state.Documents.TryGetValue(symbolRequest.Params.TextDocument.Uri, out Document? doc) is false)
         {
-            return Response.OfSuccess(symbolRequest.Id, Array.Empty<DocumentSymbol>());
+            return Task.FromResult<Response?>(
+                Response.OfSuccess(symbolRequest.Id, Array.Empty<DocumentSymbol>())
+            );
         }
 
         List<SymbolNode> symbolTree = [];
@@ -73,7 +75,7 @@ public partial class DocumentSymbolHandler(LanguageServerState state, RpcMessage
         }
 
         DocumentSymbol[] symbols = symbolTree.Select(ToDocumentSymbol).ToArray();
-        return Response.OfSuccess(symbolRequest.Id, symbols);
+        return Task.FromResult<Response?>(Response.OfSuccess(symbolRequest.Id, symbols));
     }
 
     private static DocumentSymbol ToDocumentSymbol(SymbolNode node)

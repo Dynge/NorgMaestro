@@ -31,7 +31,7 @@ public sealed class InitializeHandlerTests
             };
 
             InitializeHandler handler = new(state, new BufferingWriter(), request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             response.Should().NotBeNull();
             state.WorkspaceRoot.Should().NotBeNull();
@@ -62,7 +62,7 @@ public sealed class InitializeHandlerTests
         };
 
         InitializeHandler handler = new(state, new BufferingWriter(), request);
-        Response? response = handler.HandleRequest();
+        Response? response = handler.HandleRequest().Result;
 
         response.Should().NotBeNull();
         state.WorkspaceRoot.Should().NotBeNull();
@@ -110,6 +110,6 @@ public sealed class InitializeHandlerTests
 
     private sealed class BufferingWriter : IRpcWriter
     {
-        public void EncodeAndWrite(object o) { }
+        public Task EncodeAndWrite(object o) => Task.CompletedTask;
     }
 }

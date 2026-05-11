@@ -36,7 +36,7 @@ public sealed class PrepareRenameHandlerTests
             };
 
             PrepareRenameHandler handler = new(new LanguageServerState(), request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             response.Should().NotBeNull();
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
@@ -81,7 +81,7 @@ public sealed class PrepareRenameHandlerTests
             };
 
             PrepareRenameHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             TextRange? range = result.Deserialize<TextRange>();
@@ -123,7 +123,7 @@ public sealed class PrepareRenameHandlerTests
             };
 
             PrepareRenameHandler handler = new(state, request);
-            Response? response = handler.HandleRequest();
+            Response? response = handler.HandleRequest().Result;
 
             JsonElement result = response!.Result ?? throw new Xunit.Sdk.XunitException("Missing result payload");
             TextRange? range = result.Deserialize<TextRange>();
