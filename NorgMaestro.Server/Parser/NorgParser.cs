@@ -40,22 +40,23 @@ internal partial class NorgParser : INorgParser
         return await GetMetadata(fileUri, content);
     }
 
-    public static async Task<NeorgMetadata> GetMetadata(Uri fileUri, string[] content)
+    public static Task<NeorgMetadata> GetMetadata(Uri fileUri, string[] content)
     {
         NeorgMetadata metadata = new() { FileUri = fileUri };
 
-        using StringReader streamReader = new(string.Join('\n', content));
-        string? line = (await streamReader.ReadLineAsync())?.Trim();
         bool? insideMetadata = null;
-        uint lineNr = 0;
-        while (line is not null)
+        for (int i = 0; i < content.Length; i++)
         {
+            string line = content[i].Trim();
+            uint lineNr = (uint)i;
+
             insideMetadata = line switch
             {
                 "@document.meta" => true,
                 "@end" => false,
                 _ => insideMetadata,
             };
+
             if (insideMetadata is false)
             {
                 break;
@@ -106,19 +107,25 @@ internal partial class NorgParser : INorgParser
                             }
                         );
                     }
-                    line = streamReader.ReadLine();
-                    lineNr++;
 
-                    while (line is not null && !line.EndsWith(']'))
+                    i++;
+                    while (i < content.Length)
                     {
-                        categoryStart = (uint)line.TakeWhile(char.IsWhiteSpace).Count();
-                        categoryEnd = (uint)line.Length;
-                        if (line.Trim().Length is not 0)
+                        string categoryLine = content[i];
+                        if (categoryLine.EndsWith(']'))
+                        {
+                            break;
+                        }
+
+                        lineNr = (uint)i;
+                        categoryStart = (uint)categoryLine.TakeWhile(char.IsWhiteSpace).Count();
+                        categoryEnd = (uint)categoryLine.Length;
+                        if (categoryLine.Trim().Length is not 0)
                         {
                             categories.Add(
                                 new()
                                 {
-                                    Name = line,
+                                    Name = categoryLine,
                                     Range = new()
                                     {
                                         Start = new()
@@ -131,8 +138,8 @@ internal partial class NorgParser : INorgParser
                                 }
                             );
                         }
-                        line = await streamReader.ReadLineAsync();
-                        lineNr++;
+
+                        i++;
                     }
 
                     metadata = metadata with { Categories = [.. categories] };
@@ -159,20 +166,14 @@ internal partial class NorgParser : INorgParser
                 default:
                     break;
             }
-
-            if (line is not null)
-            {
-                line = streamReader.ReadLine();
-                lineNr++;
-            }
         }
 
         if (insideMetadata is true)
         {
-            return new() { FileUri = metadata.FileUri };
+            return Task.FromResult(new NeorgMetadata() { FileUri = metadata.FileUri });
         }
 
-        return metadata;
+        return Task.FromResult(metadata);
     }
 
     public static Dictionary<Uri, HashSet<ReferenceLocation>> GetReferences(
