@@ -1,4 +1,3 @@
-using NorgMaestro.Server.Parser;
 using NorgMaestro.Server.Rpc;
 
 namespace NorgMaestro.Server.Methods;
@@ -20,38 +19,45 @@ public class OutgoingCallsHandler(LanguageServerState state, RpcMessage request)
         }
 
         List<OutgoingCallsResponseParams> outgoingCalls = [];
-        foreach (NorgLink link in NorgParser.ParseLinks(doc.Uri, doc.Content))
+        foreach ((Uri targetUri, HashSet<ReferenceLocation> locations) in _state.References)
         {
-            Uri targetUri = _state.ResolveLinkUri(link);
             if (_state.Documents.TryGetValue(targetUri, out Document? targetDoc) is false)
             {
                 continue;
             }
 
-            outgoingCalls.Add(
-                new()
+            foreach (ReferenceLocation reference in locations)
+            {
+                if (reference.Location.Uri != sourceUri.AbsoluteUri)
                 {
-                    To = new()
-                    {
-                        Uri = targetDoc.Uri.AbsoluteUri,
-                        Name = targetDoc.Metadata.Title?.Name ?? "Unknown title",
-                        Kind = SymbolKind.File,
-                        Range = targetDoc.Metadata.Title?.Range
-                            ?? new()
-                            {
-                                Start = new() { Line = 0, Character = 0 },
-                                End = new() { Line = 0, Character = 0 },
-                            },
-                        SelectionRange = targetDoc.Metadata.Title?.Range
-                            ?? new()
-                            {
-                                Start = new() { Line = 0, Character = 0 },
-                                End = new() { Line = 0, Character = 0 },
-                            },
-                    },
-                    FromRanges = [link.AbsoluteRange],
+                    continue;
                 }
-            );
+
+                outgoingCalls.Add(
+                    new()
+                    {
+                        To = new()
+                        {
+                            Uri = targetDoc.Uri.AbsoluteUri,
+                            Name = targetDoc.Metadata.Title?.Name ?? "Unknown title",
+                            Kind = SymbolKind.File,
+                            Range = targetDoc.Metadata.Title?.Range
+                                ?? new()
+                                {
+                                    Start = new() { Line = 0, Character = 0 },
+                                    End = new() { Line = 0, Character = 0 },
+                                },
+                            SelectionRange = targetDoc.Metadata.Title?.Range
+                                ?? new()
+                                {
+                                    Start = new() { Line = 0, Character = 0 },
+                                    End = new() { Line = 0, Character = 0 },
+                                },
+                        },
+                        FromRanges = [reference.Location.Range],
+                    }
+                );
+            }
         }
 
         return Task.FromResult<Response?>(Response.OfSuccess(outgoingRequest.Id, outgoingCalls));
