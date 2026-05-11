@@ -53,23 +53,32 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request) : 
         return openBrace + 1 < line.Length && line[openBrace + 1] == ':';
     }
 
-    private HashSet<CompletionItem> GetCategoryCompletions(
+    private IEnumerable<CompletionItem> GetCategoryCompletions(
         CompletionRequestParams completionRequestParams
     )
     {
-        HashSet<CompletionItem> uniqueCategories = [];
+        HashSet<string> uniqueCategoryNames = [];
+        List<CompletionItem> completionItems = [];
+
         foreach (Document doc in _state.Documents.Values)
         {
             if (doc.Uri.Equals(completionRequestParams.TextDocument.Uri))
             {
                 continue;
             }
-            IEnumerable<CompletionItem> completionItems = doc.Metadata.Categories.Select(
-                c => new CompletionItem() { Label = c.Name }
-            );
-            uniqueCategories.UnionWith(completionItems);
+
+            foreach (var category in doc.Metadata.Categories)
+            {
+                if (uniqueCategoryNames.Add(category.Name) is false)
+                {
+                    continue;
+                }
+
+                completionItems.Add(new CompletionItem() { Label = category.Name });
+            }
         }
-        return uniqueCategories;
+
+        return completionItems;
     }
 
     private IEnumerable<CompletionItem> GetLinkCompletions(
@@ -77,65 +86,66 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request) : 
     )
     {
         TextEdit editTemplate = GetLinkEditRange(completionRequestParams);
-        IEnumerable<CompletionItem> completionItems = _state
-            .Documents.Values.Where(d => !d.Uri.Equals(completionRequestParams.TextDocument.Uri))
-            .Select(d => new CompletionItem()
+        List<CompletionItem> completionItems = [];
+
+        foreach (Document document in _state.Documents.Values)
+        {
+            if (document.Uri.Equals(completionRequestParams.TextDocument.Uri))
             {
-                Label = d.Metadata.Title?.Name ?? "[No Title]",
-                Kind = CompletionKind.File,
-                TextEdit = new()
+                continue;
+            }
+
+            string title = document.Metadata.Title?.Name ?? "[No Title]";
+            completionItems.Add(
+                new CompletionItem()
                 {
-                    Range = editTemplate.Range,
-                    NewText =
-                        $"{{:{Path.GetFileNameWithoutExtension(d.Uri.AbsolutePath)}:}}[{d.Metadata.Title?.Name ?? ""}]",
-                },
-            });
+                    Label = title,
+                    Kind = CompletionKind.File,
+                    TextEdit = new()
+                    {
+                        Range = editTemplate.Range,
+                        NewText =
+                            $"{{:{Path.GetFileNameWithoutExtension(document.Uri.AbsolutePath)}:}}[{document.Metadata.Title?.Name ?? ""}]",
+                    },
+                }
+            );
+        }
+
         return completionItems;
+    }
+
+    private static TextEdit SingleCharacterFallbackEdit(CompletionRequestParams completionRequestParams)
+    {
+        return new()
+        {
+            Range = new()
+            {
+                Start = new()
+                {
+                    Character = completionRequestParams.Position.Character - 1,
+                    Line = completionRequestParams.Position.Line,
+                },
+                End = new()
+                {
+                    Line = completionRequestParams.Position.Line,
+                    Character = completionRequestParams.Position.Character,
+                },
+            },
+            NewText = string.Empty,
+        };
     }
 
     private TextEdit GetLinkEditRange(CompletionRequestParams completionRequestParams)
     {
         if (_state.Documents.TryGetValue(completionRequestParams.TextDocument.Uri, out Document? doc) is false)
         {
-            return new()
-            {
-                Range = new()
-                {
-                    Start = new()
-                    {
-                        Character = completionRequestParams.Position.Character - 1,
-                        Line = completionRequestParams.Position.Line,
-                    },
-                    End = new()
-                    {
-                        Line = completionRequestParams.Position.Line,
-                        Character = completionRequestParams.Position.Character,
-                    },
-                },
-                NewText = string.Empty,
-            };
+            return SingleCharacterFallbackEdit(completionRequestParams);
         }
 
         int lineIndex = (int)completionRequestParams.Position.Line;
         if (lineIndex < 0 || lineIndex >= doc.Content.Length)
         {
-            return new()
-            {
-                Range = new()
-                {
-                    Start = new()
-                    {
-                        Character = completionRequestParams.Position.Character - 1,
-                        Line = completionRequestParams.Position.Line,
-                    },
-                    End = new()
-                    {
-                        Line = completionRequestParams.Position.Line,
-                        Character = completionRequestParams.Position.Character,
-                    },
-                },
-                NewText = string.Empty,
-            };
+            return SingleCharacterFallbackEdit(completionRequestParams);
         }
 
         string line = doc.Content[lineIndex];
@@ -144,23 +154,7 @@ public class CompletionHandler(LanguageServerState state, RpcMessage request) : 
         int closeBrace = openBrace >= 0 ? line.IndexOf('}', openBrace) : -1;
         if (openBrace < 0 || closeBrace < 0)
         {
-            return new()
-            {
-                Range = new()
-                {
-                    Start = new()
-                    {
-                        Character = completionRequestParams.Position.Character - 1,
-                        Line = completionRequestParams.Position.Line,
-                    },
-                    End = new()
-                    {
-                        Line = completionRequestParams.Position.Line,
-                        Character = completionRequestParams.Position.Character,
-                    },
-                },
-                NewText = string.Empty,
-            };
+            return SingleCharacterFallbackEdit(completionRequestParams);
         }
 
         int end = closeBrace + 1;
