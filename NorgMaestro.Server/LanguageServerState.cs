@@ -194,7 +194,7 @@ public class LanguageServerState
             return false;
         }
 
-        if (IsWithinRange(position, title.Range) is false)
+        if (IsPositionWithinRange(position, title.Range) is false)
         {
             return false;
         }
@@ -250,7 +250,7 @@ public class LanguageServerState
         _documents[targetUri] = doc with { Metadata = updatedMetadata };
     }
 
-    private static bool IsWithinRange(Position position, TextRange range)
+    internal static bool IsPositionWithinRange(Position position, TextRange range)
     {
         if (position.Line < range.Start.Line || position.Line > range.End.Line)
         {

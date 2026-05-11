@@ -37,29 +37,12 @@ public class PrepareRenameHandler(LanguageServerState state, RpcMessage request)
             return Task.FromResult<Response?>(Response.OfSuccess(prepareRenameRequest.Id));
         }
 
-        TextRange range = IsWithinRange(prepareRenameRequest.Params.Position, link.FileRange)
+        TextRange range = LanguageServerState.IsPositionWithinRange(
+            prepareRenameRequest.Params.Position,
+            link.FileRange
+        )
             ? link.FileRange
             : link.LinkTextRange;
         return Task.FromResult<Response?>(Response.OfSuccess(prepareRenameRequest.Id, range));
-    }
-
-    private static bool IsWithinRange(Position position, TextRange range)
-    {
-        if (position.Line < range.Start.Line || position.Line > range.End.Line)
-        {
-            return false;
-        }
-
-        if (position.Line == range.Start.Line && position.Character < range.Start.Character)
-        {
-            return false;
-        }
-
-        if (position.Line == range.End.Line && position.Character > range.End.Character)
-        {
-            return false;
-        }
-
-        return true;
     }
 }
