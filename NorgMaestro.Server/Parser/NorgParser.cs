@@ -254,18 +254,21 @@ internal partial class NorgParser : INorgParser
         Dictionary<Uri, HashSet<ReferenceLocation>> references = [];
         foreach (NorgLink link in ParseLinks(fileUri, content))
         {
+            Uri linkUri = link.GetFileLinkUri();
             string line = content[(int)link.AbsoluteRange.Start.Line];
             ReferenceLocation refLocation = new()
             {
                 Line = line,
                 Location = new() { Uri = fileUri.AbsoluteUri, Range = link.AbsoluteRange },
             };
-            references[link.GetFileLinkUri()] = references.TryGetValue(
-                link.GetFileLinkUri(),
-                out HashSet<ReferenceLocation>? value
-            )
-                ? ([.. value, refLocation])
-                : ([refLocation]);
+
+            if (references.TryGetValue(linkUri, out HashSet<ReferenceLocation>? existing))
+            {
+                _ = existing.Add(refLocation);
+                continue;
+            }
+
+            references[linkUri] = [refLocation];
         }
         return references;
     }

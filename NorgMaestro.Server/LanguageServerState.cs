@@ -74,12 +74,13 @@ public class LanguageServerState
         _documents[fileUri] = doc;
         foreach (KeyValuePair<Uri, HashSet<ReferenceLocation>> refKvp in references)
         {
-            _references[refKvp.Key] = _references.TryGetValue(
-                refKvp.Key,
-                out HashSet<ReferenceLocation>? value
-            )
-                ? ([.. value, .. refKvp.Value])
-                : ([.. refKvp.Value]);
+            if (_references.TryGetValue(refKvp.Key, out HashSet<ReferenceLocation>? existing))
+            {
+                existing.UnionWith(refKvp.Value);
+                continue;
+            }
+
+            _references[refKvp.Key] = new HashSet<ReferenceLocation>(refKvp.Value);
         }
 
         return doc;
