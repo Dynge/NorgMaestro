@@ -40,20 +40,7 @@ public partial class WorkspaceSymbolHandler(LanguageServerState state, RpcMessag
             {
                 workspaceName += $": {doc.Metadata.Description.Name}";
             }
-            var symbol = new WorkspaceSymbol()
-            {
-                Location = new()
-                {
-                    Range = new()
-                    {
-                        Start = new() { Line = 0, Character = 0 },
-                        End = new() { Line = 0, Character = 0 },
-                    },
-                    Uri = doc.Uri.AbsoluteUri,
-                },
-                Kind = SymbolKind.File,
-                Name = workspaceName,
-            };
+            WorkspaceSymbol symbol = SymbolBuilders.FileWorkspaceSymbol(doc.Uri.AbsoluteUri, workspaceName);
 
             if (filter(symbol) is false)
             {

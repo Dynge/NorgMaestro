@@ -29,14 +29,11 @@ public class IncomingCallsHandler(LanguageServerState state, RpcMessage request)
                 TextRange displayRange = group.First().Location.Range;
                 return new IncomingCallsResponseParams()
                 {
-                    From = new()
-                    {
-                        Uri = group.Key,
-                        Name = doc?.Metadata.Title?.Name ?? "Unknown title",
-                        Kind = SymbolKind.File,
-                        Range = displayRange,
-                        SelectionRange = displayRange
-                    },
+                    From = SymbolBuilders.FileCallHierarchyItem(
+                        group.Key,
+                        doc?.Metadata.Title?.Name ?? "Unknown title",
+                        displayRange
+                    ),
                     FromRanges = [.. group.Select(reference => reference.Location.Range)],
                 };
              })

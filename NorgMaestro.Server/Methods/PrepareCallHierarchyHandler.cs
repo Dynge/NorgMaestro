@@ -14,22 +14,7 @@ public class PrepareCallHierarchyHandler(LanguageServerState state, RpcMessage r
         Document doc = _state.Documents[initRequest.Params.TextDocument.Uri];
         CallHierarchyItem[] items =
         [
-            new CallHierarchyItem()
-            {
-                Name = doc.Metadata.Title?.Name ?? "",
-                Kind = SymbolKind.File,
-                Uri = doc.Uri.AbsoluteUri,
-                Range = new()
-                {
-                    Start = new() { Line = 0, Character = 0 },
-                    End = new() { Line = 0, Character = 0 },
-                },
-                SelectionRange = new()
-                {
-                    Start = new() { Line = 0, Character = 0 },
-                    End = new() { Line = 0, Character = 0 },
-                },
-            },
+            SymbolBuilders.FileCallHierarchyItem(doc.Uri.AbsoluteUri, doc.Metadata.Title?.Name ?? ""),
         ];
         return Task.FromResult<Response?>(Response.OfSuccess(initRequest.Id, items));
     }

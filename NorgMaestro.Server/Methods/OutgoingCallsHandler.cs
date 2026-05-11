@@ -36,24 +36,11 @@ public class OutgoingCallsHandler(LanguageServerState state, RpcMessage request)
                 outgoingCalls.Add(
                     new()
                     {
-                        To = new()
-                        {
-                            Uri = targetDoc.Uri.AbsoluteUri,
-                            Name = targetDoc.Metadata.Title?.Name ?? "Unknown title",
-                            Kind = SymbolKind.File,
-                            Range = targetDoc.Metadata.Title?.Range
-                                ?? new()
-                                {
-                                    Start = new() { Line = 0, Character = 0 },
-                                    End = new() { Line = 0, Character = 0 },
-                                },
-                            SelectionRange = targetDoc.Metadata.Title?.Range
-                                ?? new()
-                                {
-                                    Start = new() { Line = 0, Character = 0 },
-                                    End = new() { Line = 0, Character = 0 },
-                                },
-                        },
+                        To = SymbolBuilders.FileCallHierarchyItem(
+                            targetDoc.Uri.AbsoluteUri,
+                            targetDoc.Metadata.Title?.Name ?? "Unknown title",
+                            targetDoc.Metadata.Title?.Range
+                        ),
                         FromRanges = [reference.Location.Range],
                     }
                 );
